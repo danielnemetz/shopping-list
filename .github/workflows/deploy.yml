@@ -9,7 +9,32 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+      - name: Copy files via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          proxy_host: ${{ secrets.BASTION_HOST }}
+          proxy_username: ${{ secrets.BASTION_USER }}
+          proxy_key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "./*"
+          target: "~/docker/shopping-list"
+          rm: false
+          strip_components: 0
+          # Exclude files that should not be synced
+          overwrite: true
+          exclude: |
+            node_modules
+            .git
+            .nuxt
+            .output
+            sqlite.db
+            .env
+            data
+            compose.local.yml
+
+      - name: Restart Application via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -19,25 +44,7 @@ jobs:
           proxy_username: ${{ secrets.BASTION_USER }}
           proxy_key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            set -e
             cd ~/docker/shopping-list
-            echo "--- Debug Info ---"
-            git remote -v || echo "No remotes found"
-            ls -al server/database/migrations || echo "Migrations folder missing locally"
-            echo "------------------"
-            
-            # Detect remote name (usually origin)
-            REMOTE=$(git remote | head -n 1 || echo "")
-            if [ -z "$REMOTE" ]; then
-              echo "Error: No git remote found on server!"
-              exit 1
-            fi
-            
-            echo "Pulling latest changes from $REMOTE..."
-            git fetch "$REMOTE" main
-            git reset --hard "$REMOTE/main"
-            
-            echo "Current commit: $(git rev-parse --short HEAD)"
             echo "Building and restarting containers..."
             docker compose up -d --build
             echo "Deployment finished successfully."
