@@ -25,8 +25,10 @@ import {
   Menu as LucideMenu,
   User as LucideUser,
   Tags as LucideTags,
+  Download as LucideDownload,
 } from "lucide-vue-next";
 import { useClickOutside } from "~/composables/useClickOutside";
+import { usePwa } from "~/composables/usePwa";
 
 definePageMeta({
   middleware: "auth",
@@ -35,6 +37,7 @@ definePageMeta({
 const router = useRouter();
 const { connect, on, disconnect, state: syncState, isOnline, queueAction } = useSync();
 const { themeMode, toggleTheme } = useTheme();
+const { isInstallable, install: installApp } = usePwa();
 
 const isNavOpen = ref(false);
 const isUserMenuOpen = ref(false);
@@ -351,6 +354,13 @@ const getInitials = (name: string) => {
                 <LucideTags :size="18" />
                 <span>Tags verwalten</span>
               </NuxtLink>
+              
+              <div v-if="isInstallable" class="dropdown-divider"></div>
+              
+              <button v-if="isInstallable" class="dropdown-item install-item" @click="installApp(); isNavOpen = false">
+                <LucideDownload :size="18" />
+                <span>App installieren</span>
+              </button>
             </div>
           </Transition>
         </div>
@@ -937,6 +947,11 @@ const getInitials = (name: string) => {
 .logout-item:hover {
   background-color: rgba(239, 68, 68, 0.1);
   color: var(--danger-color);
+}
+
+.install-item:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
 }
 
 /* Transitions */
