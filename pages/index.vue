@@ -147,11 +147,31 @@ const removeTagFromItem = (item: any, tagName: string) => {
 
 const showTagPopover = ref(false);
 const activeTaggingItem = ref<any>(null);
+const popoverTagInput = ref("");
 
 const openTagPopover = (item: any) => {
   activeTaggingItem.value = JSON.parse(JSON.stringify(item));
   if (!activeTaggingItem.value.tags) activeTaggingItem.value.tags = [];
+  popoverTagInput.value = "";
   showTagPopover.value = true;
+};
+
+const addTagViaPopover = () => {
+  const trimmed = popoverTagInput.value.trim();
+  if (trimmed && activeTaggingItem.value) {
+    // Add to item
+    const lowercaseName = trimmed.toLowerCase();
+    if (!activeTaggingItem.value.tags.some((t: any) => t.name.toLowerCase() === lowercaseName)) {
+      activeTaggingItem.value.tags.push({ id: -1, name: trimmed });
+    }
+    
+    // Also add to global list if not present so it shows up in the grid immediately
+    if (!allTags.value.some((t: any) => t.name.toLowerCase() === lowercaseName)) {
+      allTags.value.push({ id: -1, name: trimmed });
+    }
+    
+    popoverTagInput.value = "";
+  }
 };
 
 const toggleTagInPopover = (tagName: string) => {
@@ -956,6 +976,19 @@ const getInitials = (name: string) => {
           </div>
           
           <div class="tag-popover-content">
+              <div class="popover-input-wrapper">
+                <input 
+                  v-model="popoverTagInput"
+                  type="text"
+                  class="popover-tag-input"
+                  placeholder="Neuen Tag hinzufügen..."
+                  @keydown.enter.prevent="addTagViaPopover"
+                />
+                <button class="popover-add-btn" @click="addTagViaPopover" :disabled="!popoverTagInput.trim()">
+                  <LucidePlus :size="18" />
+                </button>
+              </div>
+
             <div class="tag-grid">
               <button 
                 v-for="tag in allTags" 
@@ -1827,6 +1860,47 @@ const getInitials = (name: string) => {
   color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
+}
+
+.popover-input-wrapper {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.popover-tag-input {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  color: var(--text-main);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.popover-tag-input:focus {
+  border-color: var(--accent-color);
+}
+
+.popover-add-btn {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.popover-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .tag-grid {
