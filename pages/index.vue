@@ -145,6 +145,38 @@ const removeTagFromItem = (item: any, tagName: string) => {
   item.tags = item.tags.filter((t: any) => t.name !== tagName);
 };
 
+const showTagPopover = ref(false);
+const activeTaggingItem = ref<any>(null);
+
+const openTagPopover = (item: any) => {
+  activeTaggingItem.value = JSON.parse(JSON.stringify(item));
+  if (!activeTaggingItem.value.tags) activeTaggingItem.value.tags = [];
+  showTagPopover.value = true;
+};
+
+const toggleTagInPopover = (tagName: string) => {
+  if (!activeTaggingItem.value) return;
+  const index = activeTaggingItem.value.tags.findIndex((t: any) => t.name === tagName);
+  if (index >= 0) {
+    activeTaggingItem.value.tags.splice(index, 1);
+  } else {
+    activeTaggingItem.value.tags.push({ id: -1, name: tagName });
+  }
+};
+
+const closeTagPopover = async (save: boolean) => {
+  if (save && activeTaggingItem.value) {
+    // Save tags to original item and server
+    const originalItem = items.value.find(i => i.id === activeTaggingItem.value.id);
+    if (originalItem) {
+      originalItem.tags = activeTaggingItem.value.tags;
+      await saveItemTags(originalItem);
+    }
+  }
+  showTagPopover.value = false;
+  activeTaggingItem.value = null;
+};
+
 const editingItemId = ref<string | null>(null);
 const editText = ref("");
 
@@ -217,15 +249,12 @@ const onSwipeMove = (clientX: number, item: any, event?: UIEvent) => {
   if (activeSwipeItemId.value !== item.id) return;
   const diff = clientX - touchStartX.value;
 
-  // Only allow swiping to the right
-  if (diff > 0) {
-    swipeOffset.value = diff;
-    // Prevent scrolling when swiping horizontally on mobile
-    if (event && event instanceof TouchEvent && diff > 10 && event.cancelable) {
-      event.preventDefault();
-    }
-  } else {
-    swipeOffset.value = 0;
+  // Allow swiping left and right
+  swipeOffset.value = diff;
+  
+  // Prevent scrolling when swiping horizontally on mobile
+  if (event && event instanceof TouchEvent && Math.abs(diff) > 10 && event.cancelable) {
+    event.preventDefault();
   }
 };
 
@@ -248,10 +277,16 @@ const onSwipeEnd = (item?: any) => {
   if (!itemId) return;
 
   if (swipeOffset.value > swipeThreshold) {
-    // Find the item object to toggle
+    // Right swipe: Toggle complete
     const itemToToggle = items.value.find(i => i.id === itemId);
     if (itemToToggle) {
       toggleItem(itemToToggle);
+    }
+  } else if (swipeOffset.value < -swipeThreshold) {
+    // Left swipe: Open tag popover
+    const itemToTag = items.value.find(i => i.id === itemId);
+    if (itemToTag) {
+      openTagPopover(itemToTag);
     }
   }
 
@@ -586,11 +621,16 @@ const getInitials = (name: string) => {
           >
             <div 
               class="swipe-background"
+              :class="{ tagging: swipeOffset < 0 }"
               v-show="activeSwipeItemId === element.id"
             >
-              <div class="swipe-bg-content">
+              <div class="swipe-bg-content" v-if="swipeOffset > 0">
                 <LucideCheck :size="24" />
                 <span>Abschließen</span>
+              </div>
+              <div class="swipe-bg-content tagging-content" v-else-if="swipeOffset < 0">
+                <span>Taggen</span>
+                <LucideTag :size="24" />
               </div>
             </div>
 
@@ -726,11 +766,16 @@ const getInitials = (name: string) => {
         >
           <div 
             class="swipe-background reverse"
+            :class="{ tagging: swipeOffset < 0 }"
             v-show="activeSwipeItemId === item.id"
           >
-            <div class="swipe-bg-content">
+            <div class="swipe-bg-content" v-if="swipeOffset > 0">
               <LucideX :size="24" />
               <span>Wieder öffnen</span>
+            </div>
+            <div class="swipe-bg-content tagging-content" v-else-if="swipeOffset < 0">
+              <span>Taggen</span>
+              <LucideTag :size="24" />
             </div>
           </div>
 
@@ -894,6 +939,43 @@ const getInitials = (name: string) => {
         </button>
       </form>
     </footer>
+
+    <!-- Neu: Tag Auswahl Popover -->
+    <Transition name="fade">
+      <div 
+        v-if="showTagPopover" 
+        class="tag-popover-overlay"
+        @click="closeTagPopover(true)"
+      >
+        <div class="tag-popover-panel glass-panel" @click.stop>
+          <div class="tag-popover-header">
+            <h3>Tags für "{{ activeTaggingItem?.text }}"</h3>
+            <button class="tag-popover-close" @click="closeTagPopover(true)">
+              <LucideX :size="20" />
+            </button>
+          </div>
+          
+          <div class="tag-popover-content">
+            <div class="tag-grid">
+              <button 
+                v-for="tag in allTags" 
+                :key="tag.id"
+                class="tag-selection-btn"
+                :class="{ active: activeTaggingItem?.tags?.some((t: any) => t.name === tag.name) }"
+                @click="toggleTagInPopover(tag.name)"
+              >
+                <LucideTag :size="14" />
+                {{ tag.name }}
+              </button>
+            </div>
+            
+            <div class="tag-popover-footer">
+              <button class="done-btn" @click="closeTagPopover(true)">Fertig</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -1248,8 +1330,13 @@ const getInitials = (name: string) => {
   pointer-events: none;
 }
 
-.swipe-background.reverse {
-  background: var(--text-muted);
+.swipe-background.tagging {
+  background: var(--accent-color);
+  justify-content: flex-end;
+}
+
+.tagging-content {
+  flex-direction: row;
 }
 
 .swipe-bg-content {
@@ -1689,7 +1776,123 @@ const getInitials = (name: string) => {
   }
 }
 
-/* Fallback for touch devices to always show delete btn since hover doesn't work well */
+.tag-popover-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.tag-popover-panel {
+  width: 100%;
+  max-width: 500px;
+  background: var(--bg-surface-elevated);
+  border-radius: 24px 24px 0 0;
+  padding: 1.5rem;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.tag-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.tag-popover-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.tag-popover-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.tag-selection-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.tag-selection-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.tag-selection-btn.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.tag-popover-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.done-btn {
+  width: 100%;
+  padding: 1rem;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.done-btn:active {
+  transform: scale(0.98);
+}
+
+/* Transitions */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+/* Fallback for touch devices... */
 @media (hover: none) {
   .delete-btn {
     opacity: 0.8;
