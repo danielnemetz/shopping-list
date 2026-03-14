@@ -13,6 +13,8 @@ class EventHub extends EventEmitter {
   
   // userId -> Map<clientId, ClientInfo>
   private activeUsers = new Map<string, Map<string, ClientInfo>>();
+  // itemId -> userId -> { name: string, timestamp: number }
+  private activeTyping = new Map<string, Map<string, { name: string, timestamp: number }>>();
   // userId -> timer
   private offlineTimers = new Map<string, NodeJS.Timeout>();
   
@@ -20,9 +22,9 @@ class EventHub extends EventEmitter {
     super();
     this.setMaxListeners(100);
     
-    // Background pruning task (cleanup for dead clients)
-    setInterval(() => this.pruneDeadConnections(), 30000);
-    console.log('[EventHub] Initialized with 30s pruning loop');
+    // Background pruning task (cleanup for dead clients AND typing)
+    setInterval(() => this.pruneStaleState(), 10000);
+    console.log('[EventHub] Initialized with 10s pruning loop');
   }
 
   public static getInstance(): EventHub {
@@ -31,6 +33,35 @@ class EventHub extends EventEmitter {
       (globalThis as any)[globalKey] = new EventHub();
     }
     return (globalThis as any)[globalKey];
+  }
+
+  public setTyping(itemId: string, userId: string, userName: string) {
+    if (!this.activeTyping.has(itemId)) {
+      this.activeTyping.set(itemId, new Map());
+    }
+    const typers = this.activeTyping.get(itemId)!;
+    const wasTyping = typers.has(userId);
+    typers.set(userId, { name: userName, timestamp: Date.now() });
+
+    if (!wasTyping) {
+      this.broadcastTyping(itemId);
+    }
+  }
+
+  public getTypingUsers(itemId: string) {
+    const typers = this.activeTyping.get(itemId);
+    if (!typers) return [];
+    return Array.from(typers.entries()).map(([userId, info]) => ({
+      id: userId,
+      name: info.name
+    }));
+  }
+
+  private broadcastTyping(itemId: string) {
+    this.broadcast('typing:updated', { 
+      itemId, 
+      users: this.getTypingUsers(itemId) 
+    });
   }
 
   public setUserOnline(userId: string, clientId: string) {
@@ -78,32 +109,44 @@ class EventHub extends EventEmitter {
   }
 
   /**
-   * Prune clients who haven't sent a heartbeat for > 45 seconds
+   * Prune clients and typing indicators
    */
-  private pruneDeadConnections() {
+  private pruneStaleState() {
     const now = Date.now();
-    const timeout = 45000;
-    let changed = false;
+    const presenceTimeout = 45000;
+    const typingTimeout = 6000;
+    let presenceChanged = false;
 
+    // 1. Prune Presence
     for (const [userId, clients] of this.activeUsers.entries()) {
       const initialSize = clients.size;
-      
       for (const [clientId, info] of clients.entries()) {
-        if (now - info.lastSeen > timeout) {
+        if (now - info.lastSeen > presenceTimeout) {
           console.log(`[Presence] PRUNING dead client ${clientId} for user ${userId}`);
           clients.delete(clientId);
         }
       }
-
       if (initialSize > 0 && clients.size === 0) {
-        // When pruning leads to 0 clients, we also want to wait for grace period?
-        // Actually, if they haven't been seen for 45s, they are definitely gone.
         console.log(`[Presence] User ${userId} is now OFFLINE (all clients pruned)`);
-        changed = true;
+        presenceChanged = true;
       }
     }
 
-    if (changed) {
+    // 2. Prune Typing
+    for (const [itemId, typers] of this.activeTyping.entries()) {
+      let typingChanged = false;
+      for (const [userId, info] of typers.entries()) {
+        if (now - info.timestamp > typingTimeout) {
+          typers.delete(userId);
+          typingChanged = true;
+        }
+      }
+      if (typingChanged) {
+        this.broadcastTyping(itemId);
+      }
+    }
+
+    if (presenceChanged) {
       this.broadcastPresence();
     }
   }

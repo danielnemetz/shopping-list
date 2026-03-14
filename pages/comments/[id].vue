@@ -14,7 +14,7 @@ definePageMeta({
 
 const router = useRouter();
 const route = useRoute();
-const { connect, on, disconnect, isOnline } = useSync();
+const { connect, on, disconnect, isOnline, setTyping } = useSync();
 const itemId = route.params.id as string;
 
 const item = ref<any>(null);
@@ -23,6 +23,10 @@ const newComment = ref("");
 const isLoading = ref(true);
 const isSending = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
+const typingUsers = ref<{ id: string, name: string }[]>([]);
+const currentUser = ref<any>(null);
+
+let lastTypingReport = 0;
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -68,6 +72,17 @@ const sendComment = async () => {
   }
 };
 
+// Handle typing indicators
+watch(newComment, (val) => {
+  if (val.length > 0) {
+    const now = Date.now();
+    if (now - lastTypingReport > 3000) {
+      lastTypingReport = now;
+      setTyping(itemId);
+    }
+  }
+});
+
 const formatTime = (dateStr: string) => {
   const date = new Date(dateStr);
   const now = new Date();
@@ -95,6 +110,11 @@ const getInitials = (name: string) => {
 };
 
 onMounted(async () => {
+  try {
+    const me = await $fetch<any>("/api/auth/me");
+    currentUser.value = me.user;
+  } catch (e) {}
+
   await Promise.all([fetchItem(), fetchComments()]);
   isLoading.value = false;
 
@@ -105,8 +125,20 @@ onMounted(async () => {
       fetchComments();
     }
   });
+
+  on("typing:updated", (data: any) => {
+    if (data.itemId === itemId) {
+      // Filter out self
+      typingUsers.value = data.users.filter((u: any) => u.id !== currentUser.value?.id && u.id !== 'admin');
+    }
+  });
+
   // Also refresh item if it gets updated (e.g. name change or completion)
   on("items:updated", fetchItem);
+});
+
+onUnmounted(() => {
+  disconnect();
 });
 
 onUnmounted(() => {
@@ -155,6 +187,17 @@ onUnmounted(() => {
 
     <!-- Input -->
     <footer class="comment-input glass-panel">
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" v-if="typingUsers.length > 0">
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="typing-text">
+          {{ typingUsers.map(u => u.name).join(', ') }} 
+          {{ typingUsers.length === 1 ? 'schreibt...' : 'schreiben...' }}
+        </span>
+      </div>
+
       <form @submit.prevent="sendComment" class="comment-form">
         <input
           v-model="newComment"
@@ -308,9 +351,55 @@ onUnmounted(() => {
 }
 
 .comment-input {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem 0.75rem;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
+  position: relative;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  animation: fade-in 0.3s ease;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.typing-dots span {
+  width: 4px;
+  height: 4px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: typing-dots 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-dots {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-3px); opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-text {
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .comment-form {

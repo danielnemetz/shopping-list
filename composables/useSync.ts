@@ -109,6 +109,13 @@ export const useSync = () => {
     source.addEventListener('tags:updated', handle('tags:updated'));
     source.addEventListener('comments:updated', handle('comments:updated'));
     
+    source.addEventListener('typing:updated', (e: any) => {
+      try {
+        const data = JSON.parse(e.data);
+        trigger('typing:updated', data);
+      } catch (err) {}
+    });
+
     source.addEventListener('presence:updated', (e: any) => {
       try {
         syncState.onlineUsers = JSON.parse(e.data) || [];
@@ -121,6 +128,14 @@ export const useSync = () => {
         if (data.onlineUsers) syncState.onlineUsers = data.onlineUsers;
       } catch (err) {}
     });
+  };
+
+  const setTyping = async (itemId: string) => {
+    if (import.meta.server) return;
+    await $fetch('/api/typing', {
+      method: 'POST',
+      body: { itemId }
+    }).catch(() => {});
   };
 
   const disconnect = async () => {
@@ -151,6 +166,7 @@ export const useSync = () => {
     on,
     off,
     trigger,
-    isOnline
+    isOnline,
+    setTyping
   };
 };
