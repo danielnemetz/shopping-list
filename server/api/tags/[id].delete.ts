@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
       userId,
       'tag_deleted',
       tagName,
-      Date.now()
+      Math.floor(Date.now() / 1000)
     );
   });
 

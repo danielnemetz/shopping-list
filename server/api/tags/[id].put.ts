@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
       session.userId,
       'tag_updated',
       name,
-      Date.now()
+      Math.floor(Date.now() / 1000)
     );
 
     return { success: true };

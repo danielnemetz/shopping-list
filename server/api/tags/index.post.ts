@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     session.userId,
     'tag_created',
     name,
-    Date.now()
+    Math.floor(Date.now() / 1000)
   );
 
   return {

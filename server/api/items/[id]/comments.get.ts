@@ -24,7 +24,11 @@ export default defineEventHandler(async (event) => {
     comments: rawComments.map(row => ({
       id: row.id,
       text: row.text,
-      createdAt: new Date(row.created_at * 1000),
+      createdAt: (() => {
+        const ts = row.created_at ?? row.createdAt;
+        if (ts === undefined || ts === null) return new Date();
+        return new Date(ts < 10000000000 ? ts * 1000 : ts);
+      })(),
       user: {
         id: row.user_id,
         name: row.userName,

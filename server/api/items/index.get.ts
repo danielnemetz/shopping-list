@@ -38,7 +38,11 @@ export default defineEventHandler(async (event) => {
     text: row.text,
     isCompleted: !!row.is_completed,
     position: row.position,
-    createdAt: new Date(row.created_at * 1000),
+    createdAt: (() => {
+      const ts = row.created_at ?? row.createdAt;
+      if (ts === undefined || ts === null) return new Date();
+      return new Date(ts < 10000000000 ? ts * 1000 : ts);
+    })(),
     createdBy: row.created_by,
     creatorName: row.creatorName,
     commentCount: row.commentCount,
