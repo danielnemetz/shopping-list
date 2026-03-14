@@ -14,7 +14,7 @@ definePageMeta({
 
 const router = useRouter();
 const route = useRoute();
-const { connect, on } = useSync();
+const { connect, on, disconnect, isOnline } = useSync();
 const itemId = route.params.id as string;
 
 const item = ref<any>(null);
@@ -108,6 +108,10 @@ onMounted(async () => {
   // Also refresh item if it gets updated (e.g. name change or completion)
   on("items:updated", fetchItem);
 });
+
+onUnmounted(() => {
+  disconnect();
+});
 </script>
 
 <template>
@@ -139,7 +143,7 @@ onMounted(async () => {
 
       <div v-for="comment in comments" :key="comment.id" class="message-bubble">
         <div class="message-meta">
-          <div class="message-avatar">
+          <div class="message-avatar" :class="{ online: isOnline(comment.user?.id) }">
             {{ getInitials(comment.user?.name) }}
           </div>
           <span class="message-author">{{ comment.user?.name }}</span>
@@ -275,6 +279,13 @@ onMounted(async () => {
   font-size: 0.65rem;
   font-weight: 700;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.message-avatar.online {
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  border-color: #10b981;
 }
 
 .message-author {

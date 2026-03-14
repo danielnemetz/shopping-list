@@ -24,7 +24,7 @@ definePageMeta({
 });
 
 const router = useRouter();
-const { connect, on, state: syncState } = useSync();
+const { connect, on, disconnect, state: syncState, isOnline } = useSync();
 
 const user = ref<any>(null);
 const items = ref<any[]>([]);
@@ -149,6 +149,7 @@ onMounted(async () => {
     connect();
     on("items:updated", fetchItems);
     on("tags:updated", fetchTags);
+    on("comments:updated", fetchItems);
   } catch (e) {
     /* middleware handles redirect */
   }
@@ -375,6 +376,7 @@ const getInitials = (name: string) => {
                   </button>
                   <span
                     class="creator-badge"
+                    :class="{ online: isOnline(element.createdBy) }"
                     :title="'Hinzugefügt von ' + element.creatorName"
                   >
                     {{ getInitials(element.creatorName) }}
@@ -845,6 +847,15 @@ const getInitials = (name: string) => {
   padding: 0.15rem 0.4rem;
   border-radius: var(--border-radius-sm);
   color: var(--text-muted);
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.creator-badge.online {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
 }
 
 .comment-btn {

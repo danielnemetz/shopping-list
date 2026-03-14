@@ -51,8 +51,8 @@ export default defineNuxtConfig({
       globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
       runtimeCaching: [
         {
-          // Cache most API calls, but EXCLUDE auth and users to prevent stale sessions
-          urlPattern: /^https?:\/\/.*\/api\/(?!(auth|users)).*/i,
+          // Cache most API calls, but EXCLUDE auth, users, and events (SSE)
+          urlPattern: /^https?:\/\/.*\/api\/(?!(auth|users|events)).*/i,
           handler: 'NetworkFirst',
           options: {
             cacheName: 'api-cache',

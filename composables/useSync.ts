@@ -1,29 +1,38 @@
-import { ref, onMounted, onUnmounted, reactive } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue';
 
 interface SyncState {
   isConnected: boolean;
+  onlineUsers: string[];
   lastEvent: string | null;
   lastEventData: any | null;
 }
 
-// Global state for sync to share across components
 const syncState = reactive<SyncState>({
   isConnected: false,
+  onlineUsers: [],
   lastEvent: null,
   lastEventData: null,
 });
 
-// Simple event bus for components to listen to refreshes
 type RefreshCallback = (data?: any) => void;
 const listeners = new Map<string, Set<RefreshCallback>>();
 
+let globalEventSource: EventSource | null = null;
+let reconnectTimer: any = null;
+
 export const useSync = () => {
-  const eventSource = ref<EventSource | null>(null);
+  const getClientId = () => {
+    if (import.meta.server) return '';
+    let cid = sessionStorage.getItem('ls_client_id');
+    if (!cid) {
+      cid = 'c_' + Math.random().toString(36).substring(2, 10);
+      sessionStorage.setItem('ls_client_id', cid);
+    }
+    return cid;
+  };
 
   const on = (eventType: string, callback: RefreshCallback) => {
-    if (!listeners.has(eventType)) {
-      listeners.set(eventType, new Set());
-    }
+    if (!listeners.has(eventType)) listeners.set(eventType, new Set());
     listeners.get(eventType)?.add(callback);
   };
 
@@ -34,56 +43,105 @@ export const useSync = () => {
   const trigger = (eventType: string, data?: any) => {
     syncState.lastEvent = eventType;
     syncState.lastEventData = data;
-    listeners.get(eventType)?.forEach(callback => callback(data));
+    listeners.get(eventType)?.forEach(cb => cb(data));
   };
 
   const connect = () => {
-    if (import.meta.server || eventSource.value) return;
+    if (import.meta.server) return;
+    
+    // Recovery from HMR
+    if (!globalEventSource && process.dev && (window as any).__ls_sync) {
+      console.log('[Sync] Recovering connection from window');
+      globalEventSource = (window as any).__ls_sync;
+      if (globalEventSource?.readyState === EventSource.OPEN) syncState.isConnected = true;
+    }
 
-    console.log('[Sync] Connecting to SSE...');
-    eventSource.value = new EventSource('/api/events');
+    if (globalEventSource && globalEventSource.readyState !== EventSource.CLOSED) return;
 
-    eventSource.value.onopen = () => {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+
+    const cid = getClientId();
+    console.log(`[Sync] Connecting as ${cid}...`);
+    
+    const source = new EventSource(`/api/events?clientId=${cid}&t=${Date.now()}`);
+    globalEventSource = source;
+    if (process.dev) (window as any).__ls_sync = source;
+
+    source.onopen = () => {
       console.log('[Sync] Connected');
       syncState.isConnected = true;
     };
 
-    eventSource.value.onerror = (err) => {
-      console.error('[Sync] Error/Disconnected', err);
+    source.onerror = () => {
       syncState.isConnected = false;
-      eventSource.value?.close();
-      eventSource.value = null;
-      // Reconnect after 5 seconds
-      setTimeout(connect, 5000);
+      source.close();
+      if (globalEventSource === source) {
+        globalEventSource = null;
+        if (process.dev) (window as any).__ls_sync = null;
+      }
+      reconnectTimer = setTimeout(connect, 5000);
     };
 
-    // Generic event handler for known event types
-    const handleEvent = (type: string) => {
-      return (event: MessageEvent) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log(`[Sync] Event: ${type}`, data);
-          trigger(type, data);
-        } catch (e) {
-          console.warn(`[Sync] Failed to parse event data for ${type}`, e);
-          trigger(type);
-        }
-      };
+    // Unload management
+    const onUnload = () => {
+      const data = JSON.stringify({ action: 'disconnect', clientId: cid });
+      const blob = new Blob([data], { type: 'application/json' });
+      navigator.sendBeacon('/api/presence', blob);
+    };
+    
+    window.removeEventListener('beforeunload', (window as any).__ls_unload);
+    (window as any).__ls_unload = onUnload;
+    window.addEventListener('beforeunload', onUnload);
+
+    const handle = (type: string) => (msg: MessageEvent) => {
+      try {
+        const data = JSON.parse(msg.data);
+        trigger(type, data);
+      } catch (e) {
+        trigger(type);
+      }
     };
 
-    eventSource.value.addEventListener('items:updated', handleEvent('items:updated'));
-    eventSource.value.addEventListener('tags:updated', handleEvent('tags:updated'));
-    eventSource.value.addEventListener('comments:updated', handleEvent('comments:updated'));
-    eventSource.value.addEventListener('connected', (e) => console.log('[Sync] Server Handshake:', e.data));
-    eventSource.value.addEventListener('heartbeat', () => { /* Just stay alive */ });
+    source.addEventListener('items:updated', handle('items:updated'));
+    source.addEventListener('tags:updated', handle('tags:updated'));
+    source.addEventListener('comments:updated', handle('comments:updated'));
+    
+    source.addEventListener('presence:updated', (e: any) => {
+      try {
+        syncState.onlineUsers = JSON.parse(e.data) || [];
+      } catch (err) {}
+    });
+
+    source.addEventListener('connected', (e: any) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.onlineUsers) syncState.onlineUsers = data.onlineUsers;
+      } catch (err) {}
+    });
   };
 
-  const disconnect = () => {
-    if (eventSource.value) {
-      eventSource.value.close();
-      eventSource.value = null;
+  const disconnect = async () => {
+    const cid = getClientId();
+    await $fetch('/api/presence', {
+      method: 'POST',
+      body: { action: 'disconnect', clientId: cid }
+    }).catch(() => {});
+
+    if (globalEventSource) {
+      globalEventSource.close();
+      globalEventSource = null;
+      if (process.dev) (window as any).__ls_sync = null;
       syncState.isConnected = false;
+      syncState.onlineUsers = [];
     }
+  };
+
+  const isOnline = (id: string | number | null | undefined) => {
+    if (!id) return false;
+    return syncState.onlineUsers.includes(String(id));
   };
 
   return {
@@ -92,6 +150,7 @@ export const useSync = () => {
     disconnect,
     on,
     off,
-    trigger // useful for local optimistic updates if needed
+    trigger,
+    isOnline
   };
 };
