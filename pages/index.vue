@@ -45,6 +45,16 @@ const userMenuRef = ref(null);
 useClickOutside(navMenuRef, () => { isNavOpen.value = false; });
 useClickOutside(userMenuRef, () => { isUserMenuOpen.value = false; });
 
+const toggleNav = () => {
+  isNavOpen.value = !isNavOpen.value;
+  if (isNavOpen.value) isUserMenuOpen.value = false;
+};
+
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value;
+  if (isUserMenuOpen.value) isNavOpen.value = false;
+};
+
 const isPending = (itemId: string) => {
   return syncState.pendingActions.some(a => 
     (a.url.includes(`/api/items/${itemId}`) && (a.method === 'PUT' || a.method === 'DELETE')) ||
@@ -318,7 +328,7 @@ const getInitials = (name: string) => {
         <div class="menu-container" ref="navMenuRef">
           <button 
             class="burger-btn" 
-            @click="isNavOpen = !isNavOpen" 
+            @click.stop="toggleNav" 
             :class="{ 'active': isNavOpen }"
             title="Menu"
           >
@@ -354,7 +364,7 @@ const getInitials = (name: string) => {
 
       <div class="header-right">
         <div class="user-menu-container" ref="userMenuRef">
-          <button class="avatar-btn" @click="isUserMenuOpen = !isUserMenuOpen">
+          <button class="avatar-btn" @click.stop="toggleUserMenu">
             <div class="avatar" v-if="user">
               {{ user.name?.substring(0, 2).toUpperCase() }}
             </div>
@@ -368,7 +378,7 @@ const getInitials = (name: string) => {
               </div>
               <div class="dropdown-divider"></div>
               
-              <button class="dropdown-item" @click="toggleTheme">
+              <button class="dropdown-item" @click.stop="toggleTheme">
                 <LucideSun v-if="themeMode === 'light'" :size="18" />
                 <LucideMoon v-else-if="themeMode === 'dark'" :size="18" />
                 <LucideMonitor v-else :size="18" />
@@ -377,7 +387,7 @@ const getInitials = (name: string) => {
 
               <div class="dropdown-divider"></div>
               
-              <button class="dropdown-item logout-item" @click="logout">
+              <button class="dropdown-item logout-item" @click.stop="logout">
                 <LucideLogOut :size="18" />
                 <span>Abmelden</span>
               </button>
@@ -801,7 +811,7 @@ const getInitials = (name: string) => {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   cursor: pointer;
-  transition: all var(--transition-bounce);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
   padding: 0;
 }
 
@@ -853,7 +863,7 @@ const getInitials = (name: string) => {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  animation: dropdownIn 0.25s var(--transition-bounce);
+  transform-origin: top;
 }
 
 .light-theme .dropdown-menu {
@@ -925,20 +935,23 @@ const getInitials = (name: string) => {
 }
 
 /* Transitions */
-.dropdown-enter-active,
+.dropdown-enter-active {
+  transition: all 0.2s var(--transition-fast);
+}
+
 .dropdown-leave-active {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease-in;
 }
 
 .dropdown-enter-from,
 .dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-8px);
 }
 
 @keyframes dropdownIn {
-  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .list-content {
