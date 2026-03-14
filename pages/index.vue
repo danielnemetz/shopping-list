@@ -26,6 +26,7 @@ import {
   User as LucideUser,
   Tags as LucideTags,
   Download as LucideDownload,
+  Edit as LucideEdit,
 } from "lucide-vue-next";
 import { useClickOutside } from "~/composables/useClickOutside";
 import { usePwa } from "~/composables/usePwa";
@@ -142,6 +143,39 @@ const addTagToItem = (item: any, tagName: string) => {
 
 const removeTagFromItem = (item: any, tagName: string) => {
   item.tags = item.tags.filter((t: any) => t.name !== tagName);
+};
+
+const editingItemId = ref<string | null>(null);
+const editText = ref("");
+
+const startEditing = (item: any) => {
+  editingItemId.value = item.id;
+  editText.value = item.text;
+};
+
+const saveEdit = (item: any) => {
+  if (!editingItemId.value) return;
+  const trimmed = editText.value.trim();
+  if (trimmed && trimmed !== item.text) {
+    const oldText = item.text;
+    item.text = trimmed;
+    try {
+      queueAction(`/api/items/${item.id}`, "PUT", { text: trimmed });
+    } catch (e) {
+      item.text = oldText;
+      console.error("Failed to save edit", e);
+    }
+  }
+  editingItemId.value = null;
+};
+
+const handleEditKeydown = (e: KeyboardEvent, item: any) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    saveEdit(item);
+  } else if (e.key === "Escape") {
+    editingItemId.value = null;
+  }
 };
 
 const handleEditTagKeydown = (e: KeyboardEvent, item: any) => {
@@ -460,12 +494,31 @@ const getInitials = (name: string) => {
                   <div class="checkbox"></div>
                 </button>
 
-                <span class="item-text" :class="{ 'is-pending': isPending(element.id) }">{{ element.text }}</span>
+                <div class="item-text-wrapper" v-if="editingItemId === element.id">
+                  <input
+                    v-model="editText"
+                    class="item-edit-input"
+                    @keydown="(e) => handleEditKeydown(e, element)"
+                    @blur="saveEdit(element)"
+                    autofocus
+                  />
+                </div>
+                <span 
+                  v-else
+                  class="item-text" 
+                  :class="{ 'is-pending': isPending(element.id) }"
+                  @click="startEditing(element)"
+                >
+                  {{ element.text }}
+                </span>
 
                 <div class="item-meta">
                   <div class="pending-badge" v-if="isPending(element.id)" title="Wird synchronisiert...">
                     <LucideCloudUpload :size="14" class="pulse" />
                   </div>
+                  <button class="edit-btn" @click="startEditing(element)" title="Bearbeiten">
+                    <LucideEdit :size="16" />
+                  </button>
                   <button
                     class="comment-btn"
                     @click="router.push(`/comments/${element.id}`)"
@@ -556,12 +609,31 @@ const getInitials = (name: string) => {
                 <div class="checkbox"><LucideCheck :size="16" /></div>
               </button>
 
-              <span class="item-text" :class="{ 'is-pending': isPending(item.id) }">{{ item.text }}</span>
+              <div class="item-text-wrapper" v-if="editingItemId === item.id">
+                <input
+                  v-model="editText"
+                  class="item-edit-input"
+                  @keydown="(e) => handleEditKeydown(e, item)"
+                  @blur="saveEdit(item)"
+                  autofocus
+                />
+              </div>
+              <span 
+                v-else
+                class="item-text" 
+                :class="{ 'is-pending': isPending(item.id) }"
+                @click="startEditing(item)"
+              >
+                {{ item.text }}
+              </span>
 
               <div class="item-meta">
                 <div class="pending-badge" v-if="isPending(item.id)" title="Wird synchronisiert...">
                   <LucideCloudUpload :size="14" class="pulse" />
                 </div>
+                <button class="edit-btn" @click="startEditing(item)" title="Bearbeiten">
+                  <LucideEdit :size="16" />
+                </button>
                 <button
                   class="comment-btn"
                   @click="router.push(`/comments/${item.id}`)"
@@ -1193,6 +1265,44 @@ const getInitials = (name: string) => {
 
 .list-item:hover .delete-btn {
   opacity: 1;
+}
+
+.edit-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--border-radius-sm);
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.list-item:hover .edit-btn {
+  opacity: 1;
+}
+
+.edit-btn:hover {
+  color: var(--accent-color);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.item-text-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.item-edit-input {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--accent-color);
+  border-radius: 4px;
+  color: var(--text-main);
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
 }
 
 .delete-btn:hover {
