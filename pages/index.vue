@@ -178,6 +178,99 @@ const handleEditKeydown = (e: KeyboardEvent, item: any) => {
   }
 };
 
+const touchStartX = ref(0);
+const swipeOffset = ref(0);
+const activeSwipeItemId = ref<string | null>(null);
+const swipeThreshold = 100; // px to trigger
+
+// Unified start for mouse and touch
+const onSwipeStart = (clientX: number, item: any, event: UIEvent) => {
+  if (editingItemId.value === item.id || isDragging.value) return;
+  
+  // Don't start swipe if clicking on a button or the drag handle
+  const target = event.target as HTMLElement;
+  if (target.closest('button') || target.closest('.drag-handle')) return;
+
+  touchStartX.value = clientX;
+  activeSwipeItemId.value = item.id;
+  swipeOffset.value = 0;
+
+  if (event instanceof MouseEvent) {
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }
+};
+
+const onTouchStart = (e: TouchEvent, item: any) => {
+  const touch = e.touches[0];
+  if (touch) {
+    onSwipeStart(touch.clientX, item, e);
+  }
+};
+
+const onMouseDown = (e: MouseEvent, item: any) => {
+  onSwipeStart(e.clientX, item, e);
+};
+
+// Unified move logic
+const onSwipeMove = (clientX: number, item: any, event?: UIEvent) => {
+  if (activeSwipeItemId.value !== item.id) return;
+  const diff = clientX - touchStartX.value;
+
+  // Only allow swiping to the right
+  if (diff > 0) {
+    swipeOffset.value = diff;
+    // Prevent scrolling when swiping horizontally on mobile
+    if (event && event instanceof TouchEvent && diff > 10 && event.cancelable) {
+      event.preventDefault();
+    }
+  } else {
+    swipeOffset.value = 0;
+  }
+};
+
+const onTouchMove = (e: TouchEvent, item: any) => {
+  const touch = e.touches[0];
+  if (touch) {
+    onSwipeMove(touch.clientX, item, e);
+  }
+};
+
+const onMouseMove = (e: MouseEvent) => {
+  if (activeSwipeItemId.value) {
+    onSwipeMove(e.clientX, { id: activeSwipeItemId.value });
+  }
+};
+
+// Unified end logic
+const onSwipeEnd = (item?: any) => {
+  const itemId = item?.id || activeSwipeItemId.value;
+  if (!itemId) return;
+
+  if (swipeOffset.value > swipeThreshold) {
+    // Find the item object to toggle
+    const itemToToggle = items.value.find(i => i.id === itemId);
+    if (itemToToggle) {
+      toggleItem(itemToToggle);
+    }
+  }
+
+  // Finalize state
+  swipeOffset.value = 0;
+  activeSwipeItemId.value = null;
+  
+  window.removeEventListener('mousemove', onMouseMove);
+  window.removeEventListener('mouseup', onMouseUp);
+};
+
+const onTouchEnd = (e: TouchEvent, item: any) => {
+  onSwipeEnd(item);
+};
+
+const onMouseUp = () => {
+  onSwipeEnd();
+};
+
 const handleEditTagKeydown = (e: KeyboardEvent, item: any) => {
   if ((e.key === "Enter" || e.key === ",") && editTagInput.value.trim()) {
     e.preventDefault();
@@ -483,13 +576,36 @@ const getInitials = (name: string) => {
         v-if="openItems.length > 0"
       >
         <template #item="{ element }">
-          <div class="list-item open-item glass-panel">
-            <button class="drag-handle" title="Verschieben">
-              <LucideGripVertical :size="20" />
-            </button>
+          <div 
+            class="list-item open-item glass-panel"
+            @touchstart="onTouchStart($event, element)"
+            @touchmove="onTouchMove($event, element)"
+            @touchend="onTouchEnd($event, element)"
+            @mousedown="onMouseDown($event, element)"
+            @dragstart.prevent
+          >
+            <div 
+              class="swipe-background"
+              v-show="activeSwipeItemId === element.id"
+            >
+              <div class="swipe-bg-content">
+                <LucideCheck :size="24" />
+                <span>Abschließen</span>
+              </div>
+            </div>
 
-            <div class="item-content">
+            <div 
+              class="item-content"
+              :style="{ 
+                transform: activeSwipeItemId === element.id ? `translateX(${swipeOffset}px)` : 'none',
+                transition: activeSwipeItemId === element.id ? 'none' : 'transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
+              }"
+            >
               <div class="item-row">
+                <button class="drag-handle" title="Verschieben">
+                  <LucideGripVertical :size="20" />
+                </button>
+
                 <button class="checkbox-btn" @click="toggleItem(element)">
                   <div class="checkbox"></div>
                 </button>
@@ -602,8 +718,29 @@ const getInitials = (name: string) => {
           class="list-item completed-item glass-panel"
           v-for="item in visibleCompletedItems"
           :key="item.id"
+          @touchstart="onTouchStart($event, item)"
+          @touchmove="onTouchMove($event, item)"
+          @touchend="onTouchEnd($event, item)"
+          @mousedown="onMouseDown($event, item)"
+          @dragstart.prevent
         >
-          <div class="item-content">
+          <div 
+            class="swipe-background reverse"
+            v-show="activeSwipeItemId === item.id"
+          >
+            <div class="swipe-bg-content">
+              <LucideX :size="24" />
+              <span>Wieder öffnen</span>
+            </div>
+          </div>
+
+          <div 
+            class="item-content"
+            :style="{ 
+              transform: activeSwipeItemId === item.id ? `translateX(${swipeOffset}px)` : 'none',
+              transition: activeSwipeItemId === item.id ? 'none' : 'transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
+            }"
+          >
             <div class="item-row">
               <button class="checkbox-btn checked" @click="toggleItem(item)">
                 <div class="checkbox"><LucideCheck :size="16" /></div>
@@ -1085,11 +1222,42 @@ const getInitials = (name: string) => {
 }
 
 .list-item {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  touch-action: pan-y;
   display: flex;
   align-items: flex-start;
-  padding: 0.75rem 1rem;
-  gap: 0.75rem;
+  padding: 0;
   transition: border-color var(--transition-fast);
+}
+
+.swipe-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--success-color);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  z-index: 0;
+  color: white;
+  border-radius: var(--border-radius);
+  pointer-events: none;
+}
+
+.swipe-background.reverse {
+  background: var(--text-muted);
+}
+
+.swipe-bg-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .item-text.is-pending {
@@ -1108,11 +1276,22 @@ const getInitials = (name: string) => {
 }
 
 .item-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+  background: var(--bg-surface);
+  transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  will-change: transform;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1rem;
+}
+
+.open-item .item-content {
+  background: var(--bg-surface);
+}
+
+.completed-item .item-content {
+  background: var(--bg-surface-elevated);
 }
 
 .item-row {
