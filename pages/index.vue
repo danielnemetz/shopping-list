@@ -22,7 +22,11 @@ import {
   Sun as LucideSun,
   Moon as LucideMoon,
   Monitor as LucideMonitor,
+  Menu as LucideMenu,
+  User as LucideUser,
+  Tags as LucideTags,
 } from "lucide-vue-next";
+import { useClickOutside } from "~/composables/useClickOutside";
 
 definePageMeta({
   middleware: "auth",
@@ -31,6 +35,15 @@ definePageMeta({
 const router = useRouter();
 const { connect, on, disconnect, state: syncState, isOnline, queueAction } = useSync();
 const { themeMode, toggleTheme } = useTheme();
+
+const isNavOpen = ref(false);
+const isUserMenuOpen = ref(false);
+
+const navMenuRef = ref(null);
+const userMenuRef = ref(null);
+
+useClickOutside(navMenuRef, () => { isNavOpen.value = false; });
+useClickOutside(userMenuRef, () => { isUserMenuOpen.value = false; });
 
 const isPending = (itemId: string) => {
   return syncState.pendingActions.some(a => 
@@ -302,39 +315,75 @@ const getInitials = (name: string) => {
     <!-- Header -->
     <header class="list-header glass-panel">
       <div class="header-left">
-        <LucideShoppingCart :size="24" class="logo-icon" />
-        <h2>Listly</h2>
-        <div class="sync-status" :class="{ connected: syncState.isConnected }" :title="syncState.isConnected ? 'Live Synchronisation aktiv' : 'Verbindung getrennt - Reconnect...'">
+        <div class="menu-container" ref="navMenuRef">
+          <button 
+            class="burger-btn" 
+            @click="isNavOpen = !isNavOpen" 
+            :class="{ 'active': isNavOpen }"
+            title="Menu"
+          >
+            <div class="burger-bar"></div>
+            <div class="burger-bar"></div>
+            <div class="burger-bar"></div>
+          </button>
+          
+          <Transition name="dropdown">
+            <div v-if="isNavOpen" class="dropdown-menu nav-dropdown glass-panel">
+              <NuxtLink to="/activity" class="dropdown-item" @click="isNavOpen = false">
+                <LucideActivity :size="18" />
+                <span>Aktivitäten</span>
+              </NuxtLink>
+              <NuxtLink to="/tags" class="dropdown-item" @click="isNavOpen = false">
+                <LucideTags :size="18" />
+                <span>Tags verwalten</span>
+              </NuxtLink>
+            </div>
+          </Transition>
+        </div>
+
+        <div class="header-title">
+          <LucideShoppingCart :size="24" class="logo-icon" />
+          <h2>Listly</h2>
+        </div>
+
+        <div class="sync-status" :class="{ connected: syncState.isConnected }" :title="syncState.isConnected ? 'Online' : 'Offline'">
           <div class="status-dot"></div>
-          <span>Live</span>
+          <span>{{ syncState.isConnected ? "Synced" : "Offline" }}</span>
         </div>
       </div>
+
       <div class="header-right">
-        <button
-          class="btn-text"
-          @click="router.push('/activity')"
-          title="Aktivitäten"
-        >
-          <LucideActivity :size="20" />
-        </button>
-        <button
-          class="btn-text"
-          @click="router.push('/tags')"
-          title="Tags verwalten"
-        >
-          <LucideTag :size="20" />
-        </button>
-        <div class="avatar" v-if="user" :title="user.name">
-          {{ getInitials(user.name) }}
+        <div class="user-menu-container" ref="userMenuRef">
+          <button class="avatar-btn" @click="isUserMenuOpen = !isUserMenuOpen">
+            <div class="avatar" v-if="user">
+              {{ user.name?.substring(0, 2).toUpperCase() }}
+            </div>
+          </button>
+
+          <Transition name="dropdown">
+            <div v-if="isUserMenuOpen" class="dropdown-menu user-dropdown glass-panel">
+              <div class="dropdown-header">
+                <span class="user-name">{{ user?.name }}</span>
+                <span class="user-email">{{ user?.email }}</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              
+              <button class="dropdown-item" @click="toggleTheme">
+                <LucideSun v-if="themeMode === 'light'" :size="18" />
+                <LucideMoon v-else-if="themeMode === 'dark'" :size="18" />
+                <LucideMonitor v-else :size="18" />
+                <span class="flex-1">Darstellung: <strong>{{ themeMode }}</strong></span>
+              </button>
+
+              <div class="dropdown-divider"></div>
+              
+              <button class="dropdown-item logout-item" @click="logout">
+                <LucideLogOut :size="18" />
+                <span>Abmelden</span>
+              </button>
+            </div>
+          </Transition>
         </div>
-        <button class="btn-text" @click="logout" title="Abmelden">
-          <LucideLogOut :size="20" />
-        </button>
-        <button class="btn-text theme-toggle" @click="toggleTheme" :title="'Theme: ' + themeMode">
-          <LucideSun v-if="themeMode === 'light'" :size="20" />
-          <LucideMoon v-else-if="themeMode === 'dark'" :size="20" />
-          <LucideMonitor v-else :size="20" />
-        </button>
       </div>
     </header>
 
@@ -634,25 +683,31 @@ const getInitials = (name: string) => {
   padding: 1rem 1.5rem;
   padding-top: calc(1rem + env(safe-area-inset-top, 0px));
   position: relative;
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
   border-top: none;
+  background: var(--bg-color);
+  z-index: 50;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .logo-icon {
   color: var(--accent-color);
 }
 
-.header-left h2 {
+.header-title h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .sync-status {
@@ -702,32 +757,188 @@ const getInitials = (name: string) => {
   gap: 1rem;
 }
 
+.avatar-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+}
+
+.avatar-btn:hover {
+  transform: scale(1.05);
+}
+
 .avatar {
   background-color: var(--accent-color);
   color: white;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 0 0 2px var(--bg-surface);
 }
 
-.btn-text {
-  background: transparent;
-  border: none;
-  color: var(--icon-color);
+.btn-text.active {
+  color: var(--accent-color);
+}
+
+/* Burger Button Redesign */
+.burger-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   cursor: pointer;
+  transition: all var(--transition-bounce);
+  padding: 0;
+}
+
+.burger-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+  box-shadow: var(--shadow-glow);
+}
+
+.burger-btn:active {
+  transform: scale(0.95);
+}
+
+.burger-bar {
+  width: 20px;
+  height: 2px;
+  background-color: var(--text-main);
+  border-radius: 2px;
+  transition: all var(--transition-bounce);
+}
+
+.burger-btn.active .burger-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.burger-btn.active .burger-bar:nth-child(2) {
+  opacity: 0;
+}
+.burger-btn.active .burger-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Dropdown Menus */
+.menu-container, .user-menu-container {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  min-width: 240px;
+  max-width: 300px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  background: var(--bg-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  animation: dropdownIn 0.25s var(--transition-bounce);
+}
+
+.light-theme .dropdown-menu {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.nav-dropdown {
+  left: 0;
+}
+
+.user-dropdown {
+  right: 0;
+}
+
+.dropdown-header {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+.user-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 0.5rem 0;
+}
+
+.dropdown-item {
   display: flex;
   align-items: center;
-  transition: color var(--transition-fast);
-  padding: 0.25rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: all var(--transition-fast);
 }
 
-.btn-text:hover {
-  color: var(--accent-color);
+.dropdown-item:hover {
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-main);
+  transform: translateX(4px);
+}
+
+.dropdown-item strong {
+  text-transform: capitalize;
+}
+
+.logout-item:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color);
+}
+
+/* Transitions */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .list-content {
