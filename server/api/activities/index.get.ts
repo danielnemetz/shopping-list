@@ -39,8 +39,10 @@ export default defineEventHandler(async (event) => {
       action: row.action,
       itemName: row.item_name,
       createdAt: (() => {
-        const ts = row.created_at ?? row.createdAt;
-        if (ts === undefined || ts === null) return new Date();
+        const rawTs = row.created_at ?? row.createdAt ?? row.CREATED_AT ?? row.Created_At;
+        if (rawTs === undefined || rawTs === null) return new Date();
+        const ts = Number(rawTs);
+        if (isNaN(ts)) return new Date();
         return new Date(ts < 10000000000 ? ts * 1000 : ts);
       })(),
       user: {
