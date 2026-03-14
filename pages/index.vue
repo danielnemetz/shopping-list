@@ -19,6 +19,9 @@ import {
   X as LucideX,
   CloudUpload as LucideCloudUpload,
   CloudOff as LucideCloudOff,
+  Sun as LucideSun,
+  Moon as LucideMoon,
+  Monitor as LucideMonitor,
 } from "lucide-vue-next";
 
 definePageMeta({
@@ -27,6 +30,7 @@ definePageMeta({
 
 const router = useRouter();
 const { connect, on, disconnect, state: syncState, isOnline, queueAction } = useSync();
+const { themeMode, toggleTheme } = useTheme();
 
 const isPending = (itemId: string) => {
   return syncState.pendingActions.some(a => 
@@ -325,6 +329,11 @@ const getInitials = (name: string) => {
         </div>
         <button class="btn-text" @click="logout" title="Abmelden">
           <LucideLogOut :size="20" />
+        </button>
+        <button class="btn-text theme-toggle" @click="toggleTheme" :title="'Theme: ' + themeMode">
+          <LucideSun v-if="themeMode === 'light'" :size="20" />
+          <LucideMoon v-else-if="themeMode === 'dark'" :size="20" />
+          <LucideMonitor v-else :size="20" />
         </button>
       </div>
     </header>
