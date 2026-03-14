@@ -12,21 +12,39 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Copy files via SSH
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          proxy_host: ${{ secrets.BASTION_HOST }}
-          proxy_username: ${{ secrets.BASTION_USER }}
-          proxy_key: ${{ secrets.SERVER_SSH_KEY }}
-          # Sync only necessary source folders and root files
-          source: "server/,pages/,components/,assets/,public/,scripts/,middleware/,types/,drizzle/,package.json,package-lock.json,Dockerfile,compose.yml,app.vue,drizzle.config.ts,tsconfig.json"
-          target: "~/docker/shopping-list"
-          rm: false
-          strip_components: 0
-          overwrite: true
+      - name: Deploy via Rsync
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Configure SSH to use the bastion host automatically
+          cat >> ~/.ssh/config <<EOF
+          Host bastion
+            HostName ${{ secrets.BASTION_HOST }}
+            User ${{ secrets.BASTION_USER }}
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking no
+
+          Host target
+            HostName ${{ secrets.SERVER_HOST }}
+            User ${{ secrets.SERVER_USER }}
+            IdentityFile ~/.ssh/id_rsa
+            ProxyCommand ssh bastion -W %h:%p
+            StrictHostKeyChecking no
+          EOF
+
+          # Sync files robustly
+          rsync -avz --delete \
+            --exclude 'node_modules' \
+            --exclude '.git' \
+            --exclude '.output' \
+            --exclude '.nuxt' \
+            --exclude 'sqlite.db' \
+            --exclude '.env' \
+            --exclude 'data' \
+            --exclude 'compose.local.yml' \
+            ./ target:~/docker/shopping-list/
 
       - name: Restart Application via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -40,9 +58,9 @@ jobs:
           script: |
             cd ~/docker/shopping-list
             echo "--- Persistence Check ---"
-            ls -al .env data/ sqlite.db 2>/dev/null || echo "Warning: Some config/data files missing!"
+            ls -al .env data/ sqlite.db 2>/dev/null || echo "Warning: Persistence files missing!"
             echo "--- Deployment Sync Check ---"
-            find server/api -name "debug.get.ts"
+            find server/api -name "debug.get.ts" | xargs ls -l
             echo "-------------------------"
             echo "Building and restarting containers..."
             docker compose up -d --build
