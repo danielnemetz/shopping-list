@@ -39,6 +39,15 @@ export default defineEventHandler(async (event) => {
       .run();
   }
 
+  // Fetch current tags before updating to detect changes for logging
+  const oldTagsResult = sqlite.prepare(`
+    SELECT t.name 
+    FROM tags t 
+    JOIN item_tags it ON t.id = it.tag_id 
+    WHERE it.item_id = ?
+  `).all(id) as { name: string }[];
+  const oldTagNames = oldTagsResult.map(t => t.name).sort();
+
   // Handle tags update if provided
   if (Array.isArray(body?.tags)) {
     // Remove all existing tags for this item
@@ -56,6 +65,19 @@ export default defineEventHandler(async (event) => {
       }
 
       sqlite.prepare('INSERT INTO item_tags (item_id, tag_id) VALUES (?, ?)').run(id, tag.id);
+    }
+
+    // Log tag changes if any
+    const uniqueOld = [...new Set(oldTagNames)].sort();
+    const uniqueNew = [...new Set(body.tags.map((t: string) => t.trim()).filter(Boolean))].sort();
+    
+    if (JSON.stringify(uniqueOld) !== JSON.stringify(uniqueNew)) {
+      await db.insert(activities).values({
+        userId: user.userId,
+        action: 'tags_changed',
+        itemName: currentItem.text,
+        createdAt: new Date(),
+      }).run();
     }
   }
 

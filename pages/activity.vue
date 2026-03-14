@@ -20,9 +20,11 @@ interface Activity {
   id: number;
   action: string;
   itemName: string;
-  createdAt: Date;
+  createdAt: string | Date;
   user: {
+    id: string;
     name: string;
+    email: string;
   } | null;
 }
 
@@ -41,12 +43,13 @@ const fetchActivities = async (loadMore = false) => {
   }
 
   try {
-    const data = await $fetch(`/api/activities?page=${page.value}&limit=20`);
+    const data = (await $fetch(`/api/activities?page=${page.value}&limit=20`)) as any;
     if (data.success) {
+      const newActivities = data.activities as Activity[];
       if (loadMore) {
-        activities.value = [...activities.value, ...data.activities];
+        activities.value = [...activities.value, ...newActivities];
       } else {
-        activities.value = data.activities;
+        activities.value = newActivities;
       }
       totalPages.value = data.pagination.totalPages;
       hasMore.value = page.value < totalPages.value;
@@ -79,6 +82,8 @@ const getActionIcon = (action: string) => {
       return "🏷️";
     case "tag_deleted":
       return "🔥";
+    case "tags_changed":
+      return "🏷️";
     default:
       return "📝";
   }
@@ -102,13 +107,17 @@ const getActionText = (action: string) => {
       return "hat den Tag umbenannt in";
     case "tag_deleted":
       return "hat den Tag gelöscht";
+    case "tags_changed":
+      return "hat Tags geändert für";
     default:
       return "hat bearbeitet";
   }
 };
 
-const formatDate = (dateString: Date) => {
-  const d = new Date(dateString);
+const formatDate = (dateValue: string | Date) => {
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) return "Unbekanntes Datum";
+  
   const now = new Date();
   const isToday =
     d.getDate() === now.getDate() &&

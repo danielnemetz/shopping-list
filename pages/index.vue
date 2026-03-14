@@ -130,7 +130,7 @@ const fetchItems = async () => {
     const data = await $fetch<any[]>("/api/items");
     // Only update if array actually changed (prevent jumping while dragging)
     // For a real app, we'd sync more carefully, but here we replace unless user is actively dragging
-    if (!isDragging.value) {
+    if (!isDragging.value && !editingTagsItemId.value) {
       items.value = data;
     }
   } catch (err) {
@@ -323,7 +323,7 @@ const getInitials = (name: string) => {
       </div>
 
       <div class="empty-state" v-if="items.length === 0">
-        <LucideCheckCircle size="48" />
+        <LucideCheckCircle :size="48" />
         <p>Alles erledigt! Zeit, die Beine hochzulegen.</p>
       </div>
 

@@ -10,24 +10,22 @@ const __dirname = path.dirname(__filename);
 const isProduction = fs.existsSync(path.resolve(__dirname, '../.output'));
 const baseDir = isProduction ? path.resolve(__dirname, '../.output/server/node_modules') : path.resolve(__dirname, '../node_modules');
 
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 async function loadLibrary(name) {
   try {
     // Try standard import first
     return await import(name);
   } catch (e) {
-    // Fallback for production/Docker if node_modules is not in the standard path
+    // Fallback for production/Docker: use require with explicit path
     if (fs.existsSync(path.resolve(__dirname, '../.output'))) {
-      const p = path.resolve(__dirname, '../.output/server/node_modules', name + (name.endsWith('.js') ? '' : '/index.mjs'));
+      const prodRequire = createRequire(path.resolve(__dirname, '../.output/server/index.mjs'));
       try {
-        return await import(p);
+        const lib = prodRequire(name);
+        return lib.default ? lib : { default: lib, ...lib };
       } catch (e2) {
-        // Try one more path variation
-        const p2 = path.resolve(__dirname, '../.output/server/node_modules', name + (name.endsWith('.js') ? '' : '/index.js'));
-        try {
-          return await import(p2);
-        } catch (e3) {
-          // Continue to error if all fail
-        }
+        // Continue to error if all fail
       }
     }
     console.error(`Failed to load library: ${name}`);

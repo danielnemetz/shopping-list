@@ -140,21 +140,24 @@ onMounted(async () => {
 
     <!-- Input -->
     <footer class="comment-input glass-panel">
-      <input
-        v-model="newComment"
-        type="text"
-        placeholder="Kommentar schreiben..."
-        @keyup.enter="sendComment"
-        :disabled="isSending"
-        class="comment-field"
-      />
-      <button
-        class="btn-send"
-        @click="sendComment"
-        :disabled="!newComment.trim() || isSending"
-      >
-        <LucideSend :size="18" />
-      </button>
+      <form @submit.prevent="sendComment" class="comment-form">
+        <input
+          v-model="newComment"
+          type="text"
+          placeholder="Kommentar schreiben..."
+          :disabled="isSending"
+          class="comment-field"
+          enterkeyhint="send"
+          autocomplete="off"
+        />
+        <button
+          type="submit"
+          class="btn-send"
+          :disabled="!newComment.trim() || isSending"
+        >
+          <LucideSend :size="18" />
+        </button>
+      </form>
     </footer>
   </div>
 </template>
@@ -283,12 +286,16 @@ onMounted(async () => {
 }
 
 .comment-input {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
+}
+
+.comment-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 .comment-field {

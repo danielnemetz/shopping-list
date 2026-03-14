@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const offset = (page - 1) * limit;
 
   const stmt = sqlite.prepare(`
-    SELECT a.*, u.name as userName, u.email as userEmail
+    SELECT a.*, u.name as user_name, u.email as user_email
     FROM activities a
     LEFT JOIN users u ON a.user_id = u.id
     ORDER BY a.created_at DESC
@@ -45,8 +45,8 @@ export default defineEventHandler(async (event) => {
       })(),
       user: {
         id: row.user_id,
-        name: row.userName,
-        email: row.userEmail
+        name: row.user_name,
+        email: row.user_email
       }
     })),
     pagination: {

@@ -50,10 +50,12 @@ export default defineEventHandler(async (event) => {
     itemTags.push({ id: tag.id, name: tag.name });
   }
 
+  const tagSuffix = itemTags.length > 0 ? ` (Tags: ${itemTags.map(t => t.name).join(', ')})` : '';
+
   await db.insert(activities).values({
     userId: user.userId,
     action: 'added',
-    itemName: newItem.text,
+    itemName: newItem.text + tagSuffix,
     createdAt: new Date(),
   }).run();
 
