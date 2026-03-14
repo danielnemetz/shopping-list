@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 // @ts-ignore
 import draggable from "vuedraggable";
@@ -66,6 +66,7 @@ const user = ref<any>(null);
 const items = ref<any[]>([]);
 const newItemText = ref("");
 const isSubmitting = ref(false);
+const newItemInput = ref<HTMLInputElement | null>(null);
 const allTags = ref<any[]>([]);
 const selectedFilterTags = ref<number[]>([]);
 const newItemTags = ref<string[]>([]);
@@ -275,6 +276,9 @@ const addItem = async () => {
 
   try {
     queueAction("/api/items", "POST", { text, tags, tempId });
+    nextTick(() => {
+      newItemInput.value?.focus();
+    });
   } catch (error) {
     console.error("Failed to add item", error);
   }
@@ -645,6 +649,7 @@ const getInitials = (name: string) => {
       </div>
       <form @submit.prevent="addItem" class="add-form">
         <input
+          ref="newItemInput"
           v-model="newItemText"
           type="text"
           class="input-base"
