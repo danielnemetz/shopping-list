@@ -64,13 +64,15 @@ jobs:
               # Export variables from .env
               export $(grep -v '^#' .env | xargs)
               echo "Loaded variables from .env"
+              # Debug: check if TRAEFIK_NETWORK is in .env
+              grep "TRAEFIK_NETWORK" .env || echo "TRAEFIK_NETWORK not found in .env"
             fi
             
             # Diagnostic: List networks to see what's available
             docker network ls
             
-            # Fallback for critical variables if still missing
-            export TRAEFIK_NETWORK=${TRAEFIK_NETWORK:-traefik-proxy}
+            # Fallback to the one we saw in the logs (traefik-network)
+            export TRAEFIK_NETWORK=${TRAEFIK_NETWORK:-traefik-network}
             export APP_DOMAIN=${APP_DOMAIN:-listly.nemetz.de}
             
             echo "Using TRAEFIK_NETWORK: $TRAEFIK_NETWORK"
@@ -82,9 +84,9 @@ jobs:
             docker compose build --no-cache
             
             echo "Restarting containers..."
-            # Note: We use the variables exported in this shell
+            # Force recreate and ensure variables are passed
             docker compose up -d --force-recreate
             
-            echo "--- Container Status ---"
+            echo "--- Final Check ---"
             docker ps --filter name=listly-app
             echo "Deployment finished successfully."
