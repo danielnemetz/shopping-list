@@ -1,0 +1,11 @@
+services:
+  listly:
+    build: .
+    container_name: listly-app-local
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env

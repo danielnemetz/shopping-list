@@ -1,0 +1,31 @@
+{
+  "name": "shopping-list",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@vite-pwa/nuxt": "^1.1.1",
+    "better-sqlite3": "^12.6.2",
+    "drizzle-orm": "^0.45.1",
+    "lucide-nuxt": "^1.2.2",
+    "nodemailer": "^8.0.2",
+    "nuxt": "^4.4.2",
+    "vue": "^3.5.30",
+    "vue-router": "^5.0.3",
+    "vuedraggable": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/nodemailer": "^7.0.11",
+    "drizzle-kit": "^0.31.9"
+  }
+}

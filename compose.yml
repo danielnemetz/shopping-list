@@ -1,0 +1,26 @@
+services:
+  listly:
+    build: .
+    container_name: listly-app
+    restart: unless-stopped
+    expose:
+      - "${PORT:-3000}"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.listly.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.listly.entrypoints=websecure"
+      - "traefik.http.routers.listly.tls=true"
+      - "traefik.http.routers.listly.tls.certresolver=${TRAEFIK_CERT_RESOLVER}"
+      - "traefik.http.services.listly.loadbalancer.server.port=${PORT:-3000}"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+
+networks:
+  traefik_proxy:
+    name: ${TRAEFIK_NETWORK}
+    external: true
