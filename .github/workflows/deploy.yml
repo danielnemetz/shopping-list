@@ -59,34 +59,17 @@ jobs:
             set -e
             cd ~/docker/shopping-list
             
-            echo "--- Environment & Network Check ---"
+            # Export variables from .env for docker-compose interpolation
             if [ -f .env ]; then
-              # Export variables from .env
               export $(grep -v '^#' .env | xargs)
-              echo "Loaded variables from .env"
-              # Debug: check if TRAEFIK_NETWORK is in .env
-              grep "TRAEFIK_NETWORK" .env || echo "TRAEFIK_NETWORK not found in .env"
             fi
             
-            # Diagnostic: List networks to see what's available
-            docker network ls
-            
-            # Fallback to the one we saw in the logs (traefik-network)
+            # Fallback for critical variables if missing in .env
             export TRAEFIK_NETWORK=${TRAEFIK_NETWORK:-traefik-network}
-            export APP_DOMAIN=${APP_DOMAIN:-listly.nemetz.de}
             
-            echo "Using TRAEFIK_NETWORK: $TRAEFIK_NETWORK"
+            echo "--- Deployment ---"
+            docker compose up -d --build
             
-            echo "--- Source File Check ---"
-            grep "version" server/api/debug.get.ts
-            
-            echo "Building containers (no-cache)..."
-            docker compose build --no-cache
-            
-            echo "Restarting containers..."
-            # Force recreate and ensure variables are passed
-            docker compose up -d --force-recreate
-            
-            echo "--- Final Check ---"
+            echo "--- Status ---"
             docker ps --filter name=listly-app
             echo "Deployment finished successfully."
