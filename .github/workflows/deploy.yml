@@ -58,19 +58,30 @@ jobs:
           script: |
             set -e
             cd ~/docker/shopping-list
-            echo "--- Persistence Check ---"
-            ls -al .env data/ sqlite.db 2>/dev/null || echo "Warning: Persistence files missing!"
             
-            echo "--- Host Code Check ---"
-            cat server/api/debug.get.ts | grep version
+            echo "--- Environment Check ---"
+            if [ -f .env ]; then
+              # Export variables from .env for docker-compose interpolation
+              # We use a safer way to export, ignoring comments
+              export $(grep -v '^#' .env | xargs)
+              echo "Loaded variables from .env"
+            else
+              echo "Warning: .env file not found!"
+            fi
+            
+            # Fallback for critical variables if still missing
+            export TRAEFIK_NETWORK=${TRAEFIK_NETWORK:-traefik-proxy}
+            export APP_DOMAIN=${APP_DOMAIN:-listly.nemetz.de}
+            
+            echo "--- Source File Check ---"
+            grep "version" server/api/debug.get.ts
             
             echo "Building containers (no-cache)..."
-            # Explicitly use --env-file so docker-compose can resolve variables in compose.yml
-            docker compose --env-file .env build --no-cache
+            docker compose build --no-cache
             
             echo "Restarting containers..."
-            docker compose --env-file .env up -d --force-recreate
+            docker compose up -d --force-recreate
             
-            echo "--- Final Verification ---"
+            echo "--- Container Status ---"
             docker ps --filter name=listly-app
             echo "Deployment finished successfully."
