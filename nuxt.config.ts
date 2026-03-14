@@ -30,6 +30,8 @@ export default defineNuxtConfig({
       display: 'standalone',
       orientation: 'portrait',
       start_url: '/',
+      lang: 'de',
+      categories: ['shopping', 'productivity'],
       icons: [
         {
           src: '/icon-512.png',
