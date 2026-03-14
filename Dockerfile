@@ -24,9 +24,15 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Copy files needed for dependency installation
+COPY --from=builder /app/package.json /app/package-lock.json ./
+
+# Install ONLY runtime dependencies
+# We use --omit=dev and force prebuilt binaries for better-sqlite3 if possible
+RUN npm ci --omit=dev
+
 # Copy built server from builder
 COPY --from=builder /app/.output ./.output
-COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/server/database/migrations ./server/database/migrations
 

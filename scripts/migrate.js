@@ -2,40 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Resolve dependencies from the Nuxt output directory if we're in production
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+
+// Ensure we have __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// In production (Docker), we need to find better-sqlite3 and drizzle-orm in the .output directory
-const isProduction = fs.existsSync(path.resolve(__dirname, '../.output'));
-const baseDir = isProduction ? path.resolve(__dirname, '../.output/server/node_modules') : path.resolve(__dirname, '../node_modules');
-
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
-async function loadLibrary(name) {
-  try {
-    // Try standard import first
-    return await import(name);
-  } catch (e) {
-    // Fallback for production/Docker: use require with explicit path
-    if (fs.existsSync(path.resolve(__dirname, '../.output'))) {
-      const prodRequire = createRequire(path.resolve(__dirname, '../.output/server/index.mjs'));
-      try {
-        const lib = prodRequire(name);
-        return lib.default ? lib : { default: lib, ...lib };
-      } catch (e2) {
-        // Continue to error if all fail
-      }
-    }
-    console.error(`Failed to load library: ${name}`);
-    throw e;
-  }
-}
-
-const { default: Database } = await loadLibrary('better-sqlite3');
-const { drizzle } = await loadLibrary('drizzle-orm/better-sqlite3');
-const { migrate } = await loadLibrary('drizzle-orm/better-sqlite3/migrator');
 
 const dbPath = process.env.DB_URL || './sqlite.db';
 const sqlite = new Database(dbPath);
