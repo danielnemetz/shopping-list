@@ -14,6 +14,7 @@ definePageMeta({
 
 const router = useRouter();
 const route = useRoute();
+const { connect, on } = useSync();
 const itemId = route.params.id as string;
 
 const item = ref<any>(null);
@@ -32,8 +33,8 @@ const scrollToBottom = async () => {
 
 const fetchItem = async () => {
   try {
-    const items = await $fetch("/api/items");
-    item.value = (items as any[]).find((i: any) => i.id === itemId);
+    const items = await $fetch<any[]>("/api/items");
+    item.value = items.find((i: any) => i.id === itemId);
   } catch (e) {
     console.error("Failed to fetch item", e);
   }
@@ -41,8 +42,8 @@ const fetchItem = async () => {
 
 const fetchComments = async () => {
   try {
-    const data = await $fetch(`/api/items/${itemId}/comments`);
-    comments.value = (data as any).comments;
+    const data = await $fetch<{ comments: any[] }>(`/api/items/${itemId}/comments`);
+    comments.value = data.comments;
     await scrollToBottom();
   } catch (e) {
     console.error("Failed to fetch comments", e);
@@ -96,6 +97,16 @@ const getInitials = (name: string) => {
 onMounted(async () => {
   await Promise.all([fetchItem(), fetchComments()]);
   isLoading.value = false;
+
+  // SSE Real-time Sync
+  connect();
+  on("comments:updated", (data: any) => {
+    if (data.itemId === itemId) {
+      fetchComments();
+    }
+  });
+  // Also refresh item if it gets updated (e.g. name change or completion)
+  on("items:updated", fetchItem);
 });
 </script>
 

@@ -24,6 +24,8 @@ definePageMeta({
 });
 
 const router = useRouter();
+const { connect, on, state: syncState } = useSync();
+
 const user = ref<any>(null);
 const items = ref<any[]>([]);
 const newItemText = ref("");
@@ -33,7 +35,6 @@ const selectedFilterTags = ref<number[]>([]);
 const newItemTags = ref<string[]>([]);
 const tagInput = ref("");
 const showTagInput = ref(false);
-let fetchInterval: any = null;
 
 const fetchTags = async () => {
   try {
@@ -143,14 +144,14 @@ onMounted(async () => {
     const res = await $fetch("/api/auth/me");
     user.value = res.user;
     await Promise.all([fetchItems(), fetchTags()]);
-    fetchInterval = setInterval(fetchItems, 5000);
+
+    // SSE Real-time Sync
+    connect();
+    on("items:updated", fetchItems);
+    on("tags:updated", fetchTags);
   } catch (e) {
     /* middleware handles redirect */
   }
-});
-
-onUnmounted(() => {
-  if (fetchInterval) clearInterval(fetchInterval);
 });
 
 const isDragging = ref(false);
@@ -277,6 +278,10 @@ const getInitials = (name: string) => {
       <div class="header-left">
         <LucideShoppingCart :size="24" class="logo-icon" />
         <h2>Listly</h2>
+        <div class="sync-status" :class="{ connected: syncState.isConnected }" :title="syncState.isConnected ? 'Live Synchronisation aktiv' : 'Verbindung getrennt - Reconnect...'">
+          <div class="status-dot"></div>
+          <span>Live</span>
+        </div>
       </div>
       <div class="header-right">
         <button
@@ -610,6 +615,47 @@ const getInitials = (name: string) => {
 .header-left h2 {
   margin: 0;
   font-size: 1.25rem;
+}
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.sync-status.connected {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.sync-status.connected .status-dot {
+  box-shadow: 0 0 5px currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
 }
 
 .header-right {

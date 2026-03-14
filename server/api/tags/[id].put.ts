@@ -1,5 +1,6 @@
 import { sqlite } from '../../utils/db';
 import { requireUserSession } from '../../utils/auth';
+import { eventHub } from '../../utils/events';
 
 export default defineEventHandler(async (event) => {
   const session = await requireUserSession(event);
@@ -25,6 +26,9 @@ export default defineEventHandler(async (event) => {
       name,
       Math.floor(Date.now() / 1000)
     );
+
+    // Broadcast the change for real-time sync
+    eventHub.broadcast('tags:updated');
 
     return { success: true };
   } catch (err: any) {

@@ -23,6 +23,8 @@ const successMessage = ref("");
 const isEditingId = ref<number | null>(null);
 const editName = ref("");
 
+const { connect, on } = useSync();
+
 const fetchTags = async () => {
   isLoading.value = true;
   try {
@@ -35,7 +37,11 @@ const fetchTags = async () => {
   }
 };
 
-onMounted(fetchTags);
+onMounted(() => {
+  fetchTags();
+  connect();
+  on("tags:updated", fetchTags);
+});
 
 const startEdit = (tag: any) => {
   isEditingId.value = tag.id;

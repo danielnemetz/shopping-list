@@ -1,6 +1,7 @@
 import { db } from '../../../utils/db';
 import { comments } from '../../../database/schema';
 import { requireUserSession } from '../../../utils/auth';
+import { eventHub } from '../../../utils/events';
 
 export default defineEventHandler(async (event) => {
   const user = await requireUserSession(event);
@@ -21,6 +22,9 @@ export default defineEventHandler(async (event) => {
     text: body.text.trim(),
     createdAt: new Date(),
   }).run();
+
+  // Broadcast the change for real-time sync
+  eventHub.broadcast('comments:updated', { itemId });
 
   return { success: true };
 });

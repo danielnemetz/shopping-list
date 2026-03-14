@@ -1,6 +1,7 @@
 import { db, sqlite } from '../../utils/db';
 import { items, activities } from '../../database/schema';
 import { requireUserSession } from '../../utils/auth';
+import { eventHub } from '../../utils/events';
 import crypto from 'node:crypto';
 
 export default defineEventHandler(async (event) => {
@@ -58,6 +59,9 @@ export default defineEventHandler(async (event) => {
     itemName: newItem.text + tagSuffix,
     createdAt: new Date(),
   }).run();
+
+  // Broadcast the change for real-time sync
+  eventHub.broadcast('items:updated');
 
   return {
     ...newItem,

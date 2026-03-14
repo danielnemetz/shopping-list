@@ -1,5 +1,6 @@
 import { sqlite } from '../../utils/db';
 import { requireUserSession } from '../../utils/auth';
+import { eventHub } from '../../utils/events';
 
 export default defineEventHandler(async (event) => {
   const session = await requireUserSession(event);
@@ -27,6 +28,9 @@ export default defineEventHandler(async (event) => {
   });
 
   deleteTagTx(id!, session.userId, tag.name);
+
+  // Broadcast the change for real-time sync
+  eventHub.broadcast('tags:updated');
 
   return { success: true };
 });

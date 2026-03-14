@@ -1,6 +1,7 @@
 import { db, sqlite } from '../../utils/db';
 import { items, activities } from '../../database/schema';
 import { requireUserSession } from '../../utils/auth';
+import { eventHub } from '../../utils/events';
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
@@ -96,6 +97,13 @@ export default defineEventHandler(async (event) => {
       itemName: `${currentItem.text} -> ${updateData.text}`,
       createdAt: new Date(),
     }).run();
+  }
+
+  // Broadcast the change for real-time sync
+  eventHub.broadcast('items:updated');
+  // Also broadcast tags:updated if tags were modified
+  if (Array.isArray(body?.tags)) {
+    eventHub.broadcast('tags:updated');
   }
 
   return { success: true };
