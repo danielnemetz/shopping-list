@@ -6,6 +6,7 @@ import {
   ChevronLeft as LucideChevronLeft,
   Send as LucideSend,
   Loader as LucideLoader,
+  CloudUpload as LucideCloudUpload,
 } from "lucide-vue-next";
 
 definePageMeta({
@@ -14,7 +15,7 @@ definePageMeta({
 
 const router = useRouter();
 const route = useRoute();
-const { connect, on, disconnect, isOnline, setTyping } = useSync();
+const { connect, on, disconnect, isOnline, setTyping, queueAction, state: syncState } = useSync();
 const itemId = route.params.id as string;
 
 const item = ref<any>(null);
@@ -25,6 +26,14 @@ const isSending = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
 const typingUsers = ref<{ id: string, name: string }[]>([]);
 const currentUser = ref<any>(null);
+
+const isPending = (commentId: number | string) => {
+  return syncState.pendingActions.some(a => 
+    a.url.includes(`/api/items/${itemId}/comments`) && 
+    a.method === 'POST' && 
+    a.body.tempId === commentId
+  );
+};
 
 let lastTypingReport = 0;
 
@@ -57,18 +66,30 @@ const fetchComments = async () => {
 const sendComment = async () => {
   if (!newComment.value.trim() || isSending.value) return;
 
-  isSending.value = true;
+  const text = newComment.value.trim();
+  const tempId = 'c_temp_' + Date.now();
+  
+  const optimisticComment = {
+    id: tempId,
+    text,
+    createdAt: new Date().toISOString(),
+    user: {
+      id: currentUser.value?.id,
+      name: currentUser.value?.name || "Ich"
+    }
+  };
+
+  // Optimistic UI
+  comments.value.push(optimisticComment);
+  newComment.value = "";
+  await scrollToBottom();
+
   try {
-    await $fetch(`/api/items/${itemId}/comments`, {
-      method: "POST",
-      body: { text: newComment.value.trim() },
-    });
-    newComment.value = "";
-    await fetchComments();
+    queueAction(`/api/items/${itemId}/comments`, "POST", { text, tempId });
   } catch (e) {
     console.error("Failed to send comment", e);
-  } finally {
-    isSending.value = false;
+    // Remove optimistic comment on definitive error? 
+    // In our queue system, it will just stay in the queue until success or manual clear.
   }
 };
 
@@ -180,8 +201,11 @@ onUnmounted(() => {
           </div>
           <span class="message-author">{{ comment.user?.name }}</span>
           <span class="message-time">{{ formatTime(comment.createdAt) }}</span>
+          <div v-if="isPending(comment.id)" class="pending-icon" title="Wird synchronisiert...">
+             <LucideCloudUpload :size="12" />
+          </div>
         </div>
-        <div class="message-text">{{ comment.text }}</div>
+        <div class="message-text" :class="{ 'is-pending': isPending(comment.id) }">{{ comment.text }}</div>
       </div>
     </div>
 
@@ -348,6 +372,24 @@ onUnmounted(() => {
   color: var(--text-secondary);
   line-height: 1.4;
   padding-left: calc(24px + 0.5rem);
+}
+
+.message-text.is-pending {
+  opacity: 0.6;
+}
+
+.pending-icon {
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
 }
 
 .comment-input {

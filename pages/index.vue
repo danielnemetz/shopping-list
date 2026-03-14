@@ -17,6 +17,8 @@ import {
   ChevronDown as LucideChevronDown,
   Tag as LucideTag,
   X as LucideX,
+  CloudUpload as LucideCloudUpload,
+  CloudOff as LucideCloudOff,
 } from "lucide-vue-next";
 
 definePageMeta({
@@ -24,7 +26,14 @@ definePageMeta({
 });
 
 const router = useRouter();
-const { connect, on, disconnect, state: syncState, isOnline } = useSync();
+const { connect, on, disconnect, state: syncState, isOnline, queueAction } = useSync();
+
+const isPending = (itemId: string) => {
+  return syncState.pendingActions.some(a => 
+    (a.url.includes(`/api/items/${itemId}`) && (a.method === 'PUT' || a.method === 'DELETE')) ||
+    (a.method === 'POST' && a.body.tempId === itemId)
+  );
+};
 
 const user = ref<any>(null);
 const items = ref<any[]>([]);
@@ -204,10 +213,11 @@ const updatePositions = async (sortedArray: any[]) => {
     const newPos = (i + 1) * 1000;
     if (item.position !== newPos) {
       item.position = newPos;
-      $fetch(`/api/items/${item.id}`, {
-        method: "PUT",
-        body: { position: newPos },
-      }).catch(console.error);
+      try {
+        queueAction(`/api/items/${item.id}`, "PUT", { position: newPos });
+      } catch (err) {
+        console.error(err);
+      }
     }
   }
 };
@@ -215,35 +225,44 @@ const updatePositions = async (sortedArray: any[]) => {
 const addItem = async () => {
   if (!newItemText.value.trim() || isSubmitting.value) return;
 
-  isSubmitting.value = true;
+  const tempId = 'temp_' + Date.now();
+  const newItem = {
+    id: tempId,
+    text: newItemText.value,
+    isCompleted: false,
+    createdBy: user.value?.id,
+    creatorName: user.value?.name,
+    tags: newItemTags.value.map(name => ({ id: -1, name })),
+    createdAt: new Date().toISOString(),
+    commentCount: 0,
+    position: (openItems.value[0]?.position || 0) - 1000,
+  };
+
+  // Optimistic UI
+  items.value.push(newItem);
+  const text = newItemText.value;
+  const tags = newItemTags.value;
+  newItemText.value = "";
+  newItemTags.value = [];
+  showTagInput.value = false;
+
   try {
-    const added = await $fetch("/api/items", {
-      method: "POST",
-      body: { text: newItemText.value, tags: newItemTags.value },
-    });
-    items.value.push(added);
-    newItemText.value = "";
-    newItemTags.value = [];
-    showTagInput.value = false;
-    await fetchTags();
+    queueAction("/api/items", "POST", { text, tags, tempId });
   } catch (error) {
     console.error("Failed to add item", error);
-  } finally {
-    isSubmitting.value = false;
   }
 };
 
 const toggleItem = async (item: any) => {
+  const previousState = item.isCompleted;
   item.isCompleted = !item.isCompleted;
+  
+  // Optimistic UI: we already toggled it above
   try {
-    await $fetch(`/api/items/${item.id}`, {
-      method: "PUT",
-      body: { isCompleted: item.isCompleted },
-    });
+    queueAction(`/api/items/${item.id}`, "PUT", { isCompleted: item.isCompleted });
   } catch (error) {
     console.error("Failed to toggle", error);
-    // Revert on fail
-    item.isCompleted = !item.isCompleted;
+    item.isCompleted = previousState;
   }
 };
 
@@ -252,12 +271,14 @@ const deleteItem = async (item: any) => {
     return;
   }
 
+  const previousItems = [...items.value];
   items.value = items.value.filter((i) => i.id !== item.id);
+  
   try {
-    await $fetch(`/api/items/${item.id}`, { method: "DELETE" });
+    queueAction(`/api/items/${item.id}`, "DELETE", {});
   } catch (error) {
     console.error("Failed to delete", error);
-    fetchItems(); // revert
+    items.value = previousItems;
   }
 };
 
@@ -357,9 +378,12 @@ const getInitials = (name: string) => {
                   <div class="checkbox"></div>
                 </button>
 
-                <span class="item-text">{{ element.text }}</span>
+                <span class="item-text" :class="{ 'is-pending': isPending(element.id) }">{{ element.text }}</span>
 
                 <div class="item-meta">
+                  <div class="pending-badge" v-if="isPending(element.id)" title="Wird synchronisiert...">
+                    <LucideCloudUpload :size="14" class="pulse" />
+                  </div>
                   <button
                     class="comment-btn"
                     @click="router.push(`/comments/${element.id}`)"
@@ -450,9 +474,12 @@ const getInitials = (name: string) => {
                 <div class="checkbox"><LucideCheck :size="16" /></div>
               </button>
 
-              <span class="item-text">{{ item.text }}</span>
+              <span class="item-text" :class="{ 'is-pending': isPending(item.id) }">{{ item.text }}</span>
 
               <div class="item-meta">
+                <div class="pending-badge" v-if="isPending(item.id)" title="Wird synchronisiert...">
+                  <LucideCloudUpload :size="14" class="pulse" />
+                </div>
                 <button
                   class="comment-btn"
                   @click="router.push(`/comments/${item.id}`)"
@@ -738,6 +765,21 @@ const getInitials = (name: string) => {
   padding: 0.75rem 1rem;
   gap: 0.75rem;
   transition: border-color var(--transition-fast);
+}
+
+.item-text.is-pending {
+  opacity: 0.6;
+}
+
+.pending-badge {
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
 }
 
 .item-content {

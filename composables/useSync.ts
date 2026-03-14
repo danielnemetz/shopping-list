@@ -1,10 +1,19 @@
 import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue';
 
+interface PendingAction {
+  id: string;
+  url: string;
+  method: 'POST' | 'PUT' | 'DELETE';
+  body: any;
+  timestamp: number;
+}
+
 interface SyncState {
   isConnected: boolean;
   onlineUsers: string[];
   lastEvent: string | null;
   lastEventData: any | null;
+  pendingActions: PendingAction[];
 }
 
 const syncState = reactive<SyncState>({
@@ -12,6 +21,7 @@ const syncState = reactive<SyncState>({
   onlineUsers: [],
   lastEvent: null,
   lastEventData: null,
+  pendingActions: [],
 });
 
 type RefreshCallback = (data?: any) => void;
@@ -19,6 +29,23 @@ const listeners = new Map<string, Set<RefreshCallback>>();
 
 let globalEventSource: EventSource | null = null;
 let reconnectTimer: any = null;
+let isProcessingQueue = false;
+
+// Initialize queue from localStorage
+if (typeof window !== 'undefined') {
+  const saved = localStorage.getItem('ls_pending_actions');
+  if (saved) {
+    try {
+      syncState.pendingActions = JSON.parse(saved);
+    } catch (e) {
+      localStorage.removeItem('ls_pending_actions');
+    }
+  }
+}
+
+const saveQueue = () => {
+  localStorage.setItem('ls_pending_actions', JSON.stringify(syncState.pendingActions));
+};
 
 export const useSync = () => {
   const getClientId = () => {
@@ -126,8 +153,67 @@ export const useSync = () => {
       try {
         const data = JSON.parse(e.data);
         if (data.onlineUsers) syncState.onlineUsers = data.onlineUsers;
+        // Try to sync whenever we connect
+        processQueue();
       } catch (err) {}
     });
+
+    // Handle browser online event
+    if (import.meta.client) {
+      window.addEventListener('online', processQueue);
+    }
+  };
+
+  const queueAction = (url: string, method: 'POST' | 'PUT' | 'DELETE', body: any) => {
+    const action: PendingAction = {
+      id: 'a_' + Math.random().toString(36).substring(2, 10),
+      url,
+      method,
+      body,
+      timestamp: Date.now(),
+    };
+    syncState.pendingActions.push(action);
+    saveQueue();
+    processQueue(); // Try immediately
+    return action.id;
+  };
+
+  const processQueue = async () => {
+    if (isProcessingQueue || syncState.pendingActions.length === 0) return;
+    if (!navigator.onLine) return; // Simple check
+
+    isProcessingQueue = true;
+    console.log(`[Sync] Processing ${syncState.pendingActions.length} pending actions...`);
+
+    while (syncState.pendingActions.length > 0) {
+      // Re-check online status each time
+      if (!navigator.onLine) break;
+
+      const action = syncState.pendingActions[0];
+      if (!action) break;
+
+      try {
+        await $fetch(action.url as any, {
+          method: action.method,
+          body: action.body,
+        });
+        
+        // Success: remove from queue
+        syncState.pendingActions.shift();
+        saveQueue();
+        console.log(`[Sync] Action ${action.id} synced successfully`);
+        
+        // Small delay to prevent hammering or give server a breather
+        await new Promise(r => setTimeout(r, 100));
+      } catch (err: any) {
+        console.warn(`[Sync] Failed to sync action ${action.id}, will retry later`, err);
+        // If it's a 4xx error (client error), maybe remove it? 
+        // For now, stop processing the queue and wait for next online/reconnect
+        break;
+      }
+    }
+
+    isProcessingQueue = false;
   };
 
   const setTyping = async (itemId: string) => {
@@ -165,8 +251,9 @@ export const useSync = () => {
     disconnect,
     on,
     off,
-    trigger,
     isOnline,
-    setTyping
+    setTyping,
+    queueAction,
+    processQueue
   };
 };
