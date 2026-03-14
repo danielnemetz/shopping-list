@@ -21,9 +21,9 @@ jobs:
           proxy_host: ${{ secrets.BASTION_HOST }}
           proxy_username: ${{ secrets.BASTION_USER }}
           proxy_key: ${{ secrets.SERVER_SSH_KEY }}
-          source: ".,!node_modules,!*.db,!*.env,!data,!.git,!.nuxt,!.output,!compose.local.yml"
+          # Sync only necessary source folders and root files
+          source: "server/,pages/,components/,assets/,public/,scripts/,middleware/,types/,drizzle/,package.json,package-lock.json,Dockerfile,compose.yml,app.vue,drizzle.config.ts,tsconfig.json"
           target: "~/docker/shopping-list"
-          # rm: false ensures we DON'T delete files on the server that aren't being pushed
           rm: false
           strip_components: 0
           overwrite: true
@@ -41,6 +41,8 @@ jobs:
             cd ~/docker/shopping-list
             echo "--- Persistence Check ---"
             ls -al .env data/ sqlite.db 2>/dev/null || echo "Warning: Some config/data files missing!"
+            echo "--- Deployment Sync Check ---"
+            find server/api -name "debug.get.ts"
             echo "-------------------------"
             echo "Building and restarting containers..."
             docker compose up -d --build
