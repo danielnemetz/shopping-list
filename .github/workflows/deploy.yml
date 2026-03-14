@@ -9,6 +9,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Copy files via SSH
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -18,21 +21,11 @@ jobs:
           proxy_host: ${{ secrets.BASTION_HOST }}
           proxy_username: ${{ secrets.BASTION_USER }}
           proxy_key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "./*"
+          source: ".,!node_modules,!*.db,!*.env,!data,!.git,!.nuxt,!.output,!compose.local.yml"
           target: "~/docker/shopping-list"
           rm: false
           strip_components: 0
-          # Exclude files that should not be synced
           overwrite: true
-          exclude: |
-            node_modules
-            .git
-            .nuxt
-            .output
-            sqlite.db
-            .env
-            data
-            compose.local.yml
 
       - name: Restart Application via SSH
         uses: appleboy/ssh-action@v1.0.3
