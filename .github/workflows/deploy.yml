@@ -64,12 +64,14 @@ jobs:
               export $(grep -v '^#' .env | xargs)
             fi
             
-            # Diagnostic: List networks to see what's available
-            docker network ls
-            
-            # Fallback for critical variables
+            # Fallback for critical variables (needed for Traefik labels)
             export TRAEFIK_NETWORK=${TRAEFIK_NETWORK:-traefik-network}
-            echo "Using TRAEFIK_NETWORK: $TRAEFIK_NETWORK"
+            export APP_DOMAIN=${APP_DOMAIN:-listly.nemetz.de}
+            export TRAEFIK_CERT_RESOLVER=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+            
+            echo "APP_DOMAIN=$APP_DOMAIN"
+            echo "TRAEFIK_NETWORK=$TRAEFIK_NETWORK"
+            echo "TRAEFIK_CERT_RESOLVER=$TRAEFIK_CERT_RESOLVER"
             
             echo "--- Deployment ---"
             docker compose up -d --build
@@ -77,6 +79,6 @@ jobs:
             echo "--- Post-Deploy Diagnostic ---"
             sleep 5
             docker compose ps
-            docker compose logs --tail 50 listly
+            docker compose logs --tail 30 listly
             
             echo "Deployment attempt finished."
