@@ -23,6 +23,7 @@ jobs:
           proxy_key: ${{ secrets.SERVER_SSH_KEY }}
           source: ".,!node_modules,!*.db,!*.env,!data,!.git,!.nuxt,!.output,!compose.local.yml"
           target: "~/docker/shopping-list"
+          # rm: false ensures we DON'T delete files on the server that aren't being pushed
           rm: false
           strip_components: 0
           overwrite: true
@@ -38,6 +39,9 @@ jobs:
           proxy_key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd ~/docker/shopping-list
+            echo "--- Persistence Check ---"
+            ls -al .env data/ sqlite.db 2>/dev/null || echo "Warning: Some config/data files missing!"
+            echo "-------------------------"
             echo "Building and restarting containers..."
             docker compose up -d --build
             echo "Deployment finished successfully."
