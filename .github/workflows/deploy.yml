@@ -59,9 +59,19 @@ jobs:
             cd ~/docker/shopping-list
             echo "--- Persistence Check ---"
             ls -al .env data/ sqlite.db 2>/dev/null || echo "Warning: Persistence files missing!"
-            echo "--- Deployment Sync Check ---"
-            find server/api -name "debug.get.ts" | xargs ls -l
+            echo "--- Source File Check ---"
+            find server/api -name "debug.get.ts" -exec ls -l {} +
+            cat server/api/debug.get.ts || echo "Debug file still missing on host!"
             echo "-------------------------"
-            echo "Building and restarting containers..."
-            docker compose up -d --build
+            
+            echo "Building containers (no-cache)..."
+            docker compose build --no-cache
+            
+            echo "Restarting containers..."
+            docker compose up -d --force-recreate
+            
+            echo "--- Container Status ---"
+            docker compose ps
+            echo "--- Startup Logs ---"
+            docker compose logs --tail 20 listly
             echo "Deployment finished successfully."
