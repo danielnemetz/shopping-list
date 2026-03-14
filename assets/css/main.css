@@ -22,7 +22,9 @@
   --bg-surface: #1e212b;
   --bg-surface-elevated: #2a2e3b;
   --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
+  --icon-color: rgba(255, 255, 255, 0.7);
   --border-color: rgba(255, 255, 255, 0.1);
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
@@ -36,7 +38,9 @@
   --bg-surface: #ffffff;
   --bg-surface-elevated: #f1f5f9;
   --text-main: #0f172a;
+  --text-secondary: #334155;
   --text-muted: #64748b;
+  --icon-color: rgba(15, 23, 42, 0.7);
   --border-color: rgba(0, 0, 0, 0.1);
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);

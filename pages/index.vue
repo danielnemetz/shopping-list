@@ -665,10 +665,10 @@ const getInitials = (name: string) => {
   letter-spacing: 0.05em;
   padding: 2px 8px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface-elevated);
   color: var(--text-muted);
   margin-left: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
@@ -718,7 +718,7 @@ const getInitials = (name: string) => {
 .btn-text {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--icon-color);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -727,7 +727,7 @@ const getInitials = (name: string) => {
 }
 
 .btn-text:hover {
-  color: var(--danger-color);
+  color: var(--accent-color);
 }
 
 .list-content {
@@ -820,7 +820,8 @@ const getInitials = (name: string) => {
 }
 
 .list-item.open-item:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--accent-color);
+  background-color: var(--bg-surface-elevated);
 }
 
 .drag-handle {
@@ -894,7 +895,7 @@ const getInitials = (name: string) => {
 
 .creator-badge {
   font-size: 0.65rem;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-surface-elevated);
   padding: 0.15rem 0.4rem;
   border-radius: var(--border-radius-sm);
   color: var(--text-muted);

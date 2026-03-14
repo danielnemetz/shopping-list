@@ -218,15 +218,16 @@ onMounted(async () => {
   height: 100vh;
   position: relative;
   /* Red tinted gradient for admin area */
-  background:
+  background: var(--bg-color);
+  background-image:
     radial-gradient(
       circle at top right,
-      rgba(239, 68, 68, 0.15),
+      rgba(239, 68, 68, 0.08),
       transparent 50%
     ),
     radial-gradient(
       circle at bottom left,
-      rgba(59, 130, 246, 0.1),
+      rgba(59, 130, 246, 0.05),
       transparent 50%
     );
 }
@@ -285,7 +286,7 @@ onMounted(async () => {
 .btn-text {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--icon-color);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -293,7 +294,7 @@ onMounted(async () => {
 }
 
 .btn-text:hover {
-  color: var(--danger-color);
+  color: var(--accent-color);
 }
 
 .list-content {
@@ -413,7 +414,8 @@ onMounted(async () => {
 }
 
 .list-item:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--accent-color);
+  background-color: var(--bg-surface-elevated);
 }
 
 .avatar {
@@ -453,7 +455,7 @@ onMounted(async () => {
 
 .creator-badge {
   font-size: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-surface-elevated);
   padding: 0.25rem 0.5rem;
   border-radius: var(--border-radius-sm);
   color: var(--text-muted);

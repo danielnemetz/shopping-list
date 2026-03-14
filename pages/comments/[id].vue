@@ -266,7 +266,7 @@ onUnmounted(() => {
 .btn-back {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--icon-color);
   cursor: pointer;
   display: flex;
   align-items: center;

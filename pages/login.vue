@@ -177,19 +177,19 @@ const verifyCode = async () => {
   min-height: 100vh;
   padding: 1.5rem;
   /* Richer, more vibrant animated background gradient */
-  background:
-    linear-gradient(135deg, #0f172a 0%, #1e293b 100%),
+  /* Use themed background */
+  background: var(--bg-color);
+  background-image: 
     radial-gradient(
       circle at top right,
-      rgba(59, 130, 246, 0.25),
+      rgba(59, 130, 246, 0.1),
       transparent 60%
     ),
     radial-gradient(
       circle at bottom left,
-      rgba(16, 185, 129, 0.15),
+      rgba(16, 185, 129, 0.1),
       transparent 60%
     );
-  background-blend-mode: screen;
 }
 
 .login-card {
@@ -199,7 +199,7 @@ const verifyCode = async () => {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
 }
 
 .header {
@@ -220,8 +220,9 @@ const verifyCode = async () => {
   margin: 0;
   font-size: 2.5rem;
   font-weight: 800;
-  background: linear-gradient(to right, #fff, #94a3b8);
+  background: linear-gradient(to right, var(--text-main), var(--text-muted));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.025em;
 }
@@ -356,7 +357,7 @@ const verifyCode = async () => {
 .divider::after {
   content: "";
   flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .divider span {
