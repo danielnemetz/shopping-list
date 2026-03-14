@@ -5,7 +5,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   try {
     const response = await $fetch('/api/auth/me', { headers });
-    if (!response || (!response.user && !response.isAdmin)) {
+    if (!response?.user) {
+      // Admin-only sessions are not allowed in the app
       return navigateTo('/login');
     }
   } catch (error) {

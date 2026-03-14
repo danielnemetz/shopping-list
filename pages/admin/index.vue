@@ -137,7 +137,7 @@ const inviteSuccess = ref(false);
 const checkAdminAccess = async () => {
   try {
     const response = await $fetch("/api/auth/me");
-    if (!response.user || !response.isAdmin) {
+    if (!response.isAdmin) {
       router.push("/admin/login");
     }
   } catch {

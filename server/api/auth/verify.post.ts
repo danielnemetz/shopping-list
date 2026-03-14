@@ -42,10 +42,11 @@ export default defineEventHandler(async (event) => {
   // Code is valid - clean up the used code
   await db.delete(authCodes).where(eq(authCodes.id, validCodeRecord.id)).run();
 
-  // Establish session
+  // Establish session - clear first to prevent overlap with any admin session
   const { getAppSession } = await import('../../utils/session');
   const session = await getAppSession(event);
 
+  await session.clear();
   await session.update({
     userId: userRecord.id,
     name: userRecord.name,

@@ -8,14 +8,9 @@ import type { H3Event } from 'h3';
 export const requireUserSession = async (event: H3Event) => {
   const session = await getAppSession(event);
 
-  // Admin session check (bypass DB check for system admin)
+  // Admin accounts must NOT access the regular app
   if (session.data.isAdmin) {
-    return {
-      userId: 'admin',
-      name: (session.data.name as string) || 'Administrator',
-      email: (session.data.email as string) || 'admin@local',
-      isAdmin: true,
-    };
+    throw createError({ statusCode: 403, statusMessage: 'Admin accounts cannot access the app. Please log in as a regular user.' });
   }
 
   // Regular user check

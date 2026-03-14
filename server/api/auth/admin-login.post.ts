@@ -16,10 +16,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Invalid password' });
   }
 
-  // Get current session and add isAdmin flag
+  // Get current session, clear it first to prevent overlap with any user session
   const { getAppSession } = await import('../../utils/session');
   const session = await getAppSession(event);
 
+  await session.clear();
   await session.update({
     isAdmin: true,
   });
