@@ -41,6 +41,9 @@ const dbPath = process.env.DB_URL || './sqlite.db';
 const sqlite = new Database(dbPath);
 const db = drizzle(sqlite);
 
+const migrationsPath = path.resolve(__dirname, '../server/database/migrations');
+console.log(`📂 Migrations folder: ${migrationsPath} (Exists: ${fs.existsSync(migrationsPath)})`);
+
 console.log(`🚀 Running migrations at ${dbPath}...`);
 
 try {

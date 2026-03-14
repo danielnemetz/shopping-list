@@ -28,6 +28,7 @@ WORKDIR /app
 COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/server/database/migrations ./server/database/migrations
 
 # Ensure data directory exists for SQLite
 RUN mkdir -p /app/data
