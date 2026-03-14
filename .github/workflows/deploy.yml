@@ -64,12 +64,19 @@ jobs:
               export $(grep -v '^#' .env | xargs)
             fi
             
-            # Fallback for critical variables if missing in .env
+            # Diagnostic: List networks to see what's available
+            docker network ls
+            
+            # Fallback for critical variables
             export TRAEFIK_NETWORK=${TRAEFIK_NETWORK:-traefik-network}
+            echo "Using TRAEFIK_NETWORK: $TRAEFIK_NETWORK"
             
             echo "--- Deployment ---"
             docker compose up -d --build
             
-            echo "--- Status ---"
-            docker ps --filter name=listly-app
-            echo "Deployment finished successfully."
+            echo "--- Post-Deploy Diagnostic ---"
+            sleep 5
+            docker compose ps
+            docker compose logs --tail 50 listly
+            
+            echo "Deployment attempt finished."
