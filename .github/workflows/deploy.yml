@@ -19,6 +19,12 @@ jobs:
           proxy_username: ${{ secrets.BASTION_USER }}
           proxy_key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
             cd ~/docker/shopping-list
-            git pull origin main
+            echo "Pulling latest changes..."
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Current commit: $(git rev-parse --short HEAD)"
+            echo "Building and restarting containers..."
             docker compose up -d --build
+            echo "Deployment finished successfully."
