@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
       id: row.id,
       action: row.action,
       itemName: row.item_name,
-      createdAt: new Date(row.created_at),
+      createdAt: new Date(row.created_at * 1000),
       user: {
         id: row.user_id,
         name: row.userName,

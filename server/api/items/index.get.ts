@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     text: row.text,
     isCompleted: !!row.is_completed,
     position: row.position,
-    createdAt: new Date(row.created_at),
+    createdAt: new Date(row.created_at * 1000),
     createdBy: row.created_by,
     creatorName: row.creatorName,
     commentCount: row.commentCount,

@@ -8,6 +8,13 @@
       "when": 1773430520724,
       "tag": "0000_wise_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773480542438,
+      "tag": "0001_woozy_solo",
+      "breakpoints": true
     }
   ]
 }

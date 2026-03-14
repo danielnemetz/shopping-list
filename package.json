@@ -10,7 +10,7 @@
     "postinstall": "nuxt prepare",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "drizzle-kit push"
+    "db:migrate": "node scripts/migrate.js"
   },
   "dependencies": {
     "@vite-pwa/nuxt": "^1.1.1",

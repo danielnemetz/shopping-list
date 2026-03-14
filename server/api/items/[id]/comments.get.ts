@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     comments: rawComments.map(row => ({
       id: row.id,
       text: row.text,
-      createdAt: new Date(row.created_at),
+      createdAt: new Date(row.created_at * 1000),
       user: {
         id: row.user_id,
         name: row.userName,

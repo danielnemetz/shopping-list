@@ -2,107 +2,65 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Resolve better-sqlite3 from the Nuxt output directory
+// Resolve dependencies from the Nuxt output directory if we're in production
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const sqlitePath = path.resolve(__dirname, '../.output/server/node_modules/better-sqlite3/lib/database.js');
 
-let Database;
-try {
-  Database = (await import(sqlitePath)).default || (await import(sqlitePath));
-} catch (e) {
-  console.error('Failed to load better-sqlite3. Are you running this inside the Docker container?', e);
-  process.exit(1);
+// In production (Docker), we need to find better-sqlite3 and drizzle-orm in the .output directory
+const isProduction = fs.existsSync(path.resolve(__dirname, '../.output'));
+const baseDir = isProduction ? path.resolve(__dirname, '../.output/server/node_modules') : path.resolve(__dirname, '../node_modules');
+
+async function loadLibrary(name) {
+  try {
+    // Try standard import first
+    return await import(name);
+  } catch (e) {
+    // Fallback for production/Docker if node_modules is not in the standard path
+    if (fs.existsSync(path.resolve(__dirname, '../.output'))) {
+      const p = path.resolve(__dirname, '../.output/server/node_modules', name + (name.endsWith('.js') ? '' : '/index.mjs'));
+      try {
+        return await import(p);
+      } catch (e2) {
+        // Try one more path variation
+        const p2 = path.resolve(__dirname, '../.output/server/node_modules', name + (name.endsWith('.js') ? '' : '/index.js'));
+        try {
+          return await import(p2);
+        } catch (e3) {
+          // Continue to error if all fail
+        }
+      }
+    }
+    console.error(`Failed to load library: ${name}`);
+    throw e;
+  }
 }
 
-const dbPath = process.env.DB_URL || './sqlite.db';
-const db = new Database(dbPath);
+const { default: Database } = await loadLibrary('better-sqlite3');
+const { drizzle } = await loadLibrary('drizzle-orm/better-sqlite3');
+const { migrate } = await loadLibrary('drizzle-orm/better-sqlite3/migrator');
 
-console.log(`🚀 Initializing database schema at ${dbPath}...`);
+const dbPath = process.env.DB_URL || './sqlite.db';
+const sqlite = new Database(dbPath);
+const db = drizzle(sqlite);
+
+console.log(`🚀 Running migrations at ${dbPath}...`);
 
 try {
-  // Create Users table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS "users" (
-      "id" text PRIMARY KEY NOT NULL,
-      "name" text NOT NULL,
-      "email" text NOT NULL,
-      "created_at" integer NOT NULL
-    );
-  `);
+  // Run migrations
+  await migrate(db, {
+    migrationsFolder: path.resolve(__dirname, '../server/database/migrations')
+  });
   
-  // Create Auth Codes table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS "auth_codes" (
-      "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-      "user_id" text NOT NULL,
-      "code" text NOT NULL,
-      "expires_at" integer NOT NULL,
-      FOREIGN KEY ("user_id") REFERENCES "users"("id") ON UPDATE no action ON DELETE cascade
-    );
-  `);
-  
-  // Create Items table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS "items" (
-      "id" text PRIMARY KEY NOT NULL,
-      "text" text NOT NULL,
-      "is_completed" integer DEFAULT 0 NOT NULL,
-      "created_by" text NOT NULL,
-      "position" real NOT NULL,
-      "created_at" text NOT NULL,
-      FOREIGN KEY ("created_by") REFERENCES "users"("id") ON UPDATE no action ON DELETE cascade
-    );
-  `);
+  console.log('✅ Migrations completed successfully!');
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS \`activities\` (
-      \`id\` INTEGER PRIMARY KEY AUTOINCREMENT,
-      \`user_id\` TEXT NOT NULL,
-      \`action\` TEXT NOT NULL,
-      \`item_name\` TEXT NOT NULL,
-      \`created_at\` INTEGER NOT NULL,
-      FOREIGN KEY (\`user_id\`) REFERENCES \`users\`(\`id\`) ON UPDATE no action ON DELETE no action
-    )
-  `);
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS \`comments\` (
-      \`id\` INTEGER PRIMARY KEY AUTOINCREMENT,
-      \`item_id\` TEXT NOT NULL,
-      \`user_id\` TEXT NOT NULL,
-      \`text\` TEXT NOT NULL,
-      \`created_at\` INTEGER NOT NULL,
-      FOREIGN KEY (\`item_id\`) REFERENCES \`items\`(\`id\`) ON UPDATE no action ON DELETE cascade,
-      FOREIGN KEY (\`user_id\`) REFERENCES \`users\`(\`id\`) ON UPDATE no action ON DELETE no action
-    )
-  `);
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS \`tags\` (
-      \`id\` INTEGER PRIMARY KEY AUTOINCREMENT,
-      \`name\` TEXT NOT NULL UNIQUE
-    )
-  `);
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS \`item_tags\` (
-      \`id\` INTEGER PRIMARY KEY AUTOINCREMENT,
-      \`item_id\` TEXT NOT NULL,
-      \`tag_id\` INTEGER NOT NULL,
-      FOREIGN KEY (\`item_id\`) REFERENCES \`items\`(\`id\`) ON UPDATE no action ON DELETE cascade,
-      FOREIGN KEY (\`tag_id\`) REFERENCES \`tags\`(\`id\`) ON UPDATE no action ON DELETE cascade
-    )
-  `);
-
-  // Ensure system admin user exists for password-only logins
-  db.exec(`
+  // Ensure system admin user exists
+  sqlite.prepare(`
     INSERT OR IGNORE INTO users (id, name, email, created_at)
-    VALUES ('admin', 'Administrator', 'admin@local', ${Date.now()})
-  `);
+    VALUES (?, ?, ?, ?)
+  `).run('admin', 'Administrator', 'admin@local', Math.floor(Date.now() / 1000));
 
-  console.log('✅ Database schema initialized successfully!');
+  console.log('✅ System admin check completed.');
 } catch (error) {
-  console.error('❌ Failed to initialize database schema:', error);
+  console.error('❌ Migration failed:', error);
   process.exit(1);
 }
