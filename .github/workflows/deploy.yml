@@ -59,19 +59,21 @@ jobs:
             set -e
             cd ~/docker/shopping-list
             
-            echo "--- Environment Check ---"
+            echo "--- Environment & Network Check ---"
             if [ -f .env ]; then
-              # Export variables from .env for docker-compose interpolation
-              # We use a safer way to export, ignoring comments
+              # Export variables from .env
               export $(grep -v '^#' .env | xargs)
               echo "Loaded variables from .env"
-            else
-              echo "Warning: .env file not found!"
             fi
+            
+            # Diagnostic: List networks to see what's available
+            docker network ls
             
             # Fallback for critical variables if still missing
             export TRAEFIK_NETWORK=${TRAEFIK_NETWORK:-traefik-proxy}
             export APP_DOMAIN=${APP_DOMAIN:-listly.nemetz.de}
+            
+            echo "Using TRAEFIK_NETWORK: $TRAEFIK_NETWORK"
             
             echo "--- Source File Check ---"
             grep "version" server/api/debug.get.ts
@@ -80,6 +82,7 @@ jobs:
             docker compose build --no-cache
             
             echo "Restarting containers..."
+            # Note: We use the variables exported in this shell
             docker compose up -d --force-recreate
             
             echo "--- Container Status ---"

@@ -1,7 +1,7 @@
 export default defineEventHandler(() => {
   return {
-    version: '1.0.8',
-    buildTime: '2026-03-14 12:40',
+    version: '1.0.9',
+    buildTime: '2026-03-14 12:42',
     status: 'online'
   };
 });
