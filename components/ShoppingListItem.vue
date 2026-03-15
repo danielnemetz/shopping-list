@@ -424,7 +424,6 @@ const onMouseUp = () => onSwipeEnd();
   padding: 0;
   opacity: 0.3;
   transition: opacity var(--transition-fast);
-  /* Damit Touch-Drag den Klon mit dem Finger bewegt statt zu scrollen */
   touch-action: none;
   -webkit-touch-callout: none;
 }
