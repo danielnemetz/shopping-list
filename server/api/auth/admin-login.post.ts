@@ -1,4 +1,5 @@
 import { useRuntimeConfig, defineEventHandler, readBody, createError } from '#imports';
+import { secureCompare } from '../../utils/crypto';
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -10,9 +11,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Password is required' });
   }
 
-  // Check if password matches the configured admin password
   const adminPassword = process.env.ADMIN_PASSWORD || config.adminPassword;
-  if (password !== adminPassword) {
+  if (!secureCompare(password, adminPassword)) {
     throw createError({ statusCode: 401, statusMessage: 'Invalid password' });
   }
 

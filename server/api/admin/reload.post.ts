@@ -1,16 +1,16 @@
 import { eventHub } from '../../utils/events';
 import { getAppSession } from '../../utils/session';
+import { secureCompare } from '../../utils/crypto';
 
 export default defineEventHandler(async (event) => {
   const session = await getAppSession(event);
   
-  // Require valid session and admin privileges
-  if (!session.data.userId || !session.data.isAdmin) {
-    // Alternatively, allow a Bearer token matching the admin password for API-only access
-    const authHeader = getRequestHeader(event, 'Authorization');
+  if (!session.data.isAdmin) {
+    const authHeader = getRequestHeader(event, 'Authorization') || '';
     const config = useRuntimeConfig();
-    
-    if (!authHeader || authHeader !== `Bearer ${config.adminPassword}`) {
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+
+    if (!token || !secureCompare(token, config.adminPassword)) {
        throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
     }
   }
