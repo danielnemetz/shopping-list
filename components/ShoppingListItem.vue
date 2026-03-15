@@ -569,7 +569,8 @@ const onMouseUp = () => onSwipeEnd();
   transition: all var(--transition-fast);
 }
 
-.list-item:hover .delete-btn, .list-item:hover .edit-btn {
+.list-item:hover .delete-btn, .list-item:hover .edit-btn,
+.list-item:hover :deep(.reaction-trigger-btn) {
   opacity: 1;
   transform: scale(1);
 }
@@ -696,7 +697,8 @@ const onMouseUp = () => onSwipeEnd();
 }
 
 @media (hover: none) {
-  .delete-btn, .edit-btn, .drag-handle {
+  .delete-btn, .edit-btn, .drag-handle,
+  :deep(.reaction-trigger-btn) {
     opacity: 0.8 !important;
   }
 }

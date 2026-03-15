@@ -209,14 +209,16 @@ onUnmounted(() => {
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  opacity: 0.4;
+  transform: scale(0.9);
+  transition: all var(--transition-fast);
 }
 
 .reaction-trigger-btn:hover,
 .reaction-trigger-btn.active {
   opacity: 1;
-  background: var(--glass-bg);
+  transform: scale(1);
+  background: var(--bg-surface-elevated);
   color: var(--accent-color);
 }
 
