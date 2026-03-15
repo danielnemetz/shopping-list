@@ -318,6 +318,10 @@ const getInitials = (name: string) => {
         group="items"
         item-key="id"
         handle=".drag-handle"
+        :force-fallback="true"
+        :fallback-on-body="true"
+        fallback-class="drag-fallback-clone"
+        chosen-class="list-item-chosen"
         @start="isDragging = true"
         @end="isDragging = false"
         class="items-list"
@@ -505,6 +509,21 @@ const getInitials = (name: string) => {
 .ghost-item {
   opacity: var(--opacity-ghost);
   transform: scale(0.95);
+}
+
+/* Dragged item (original slot) – bleibt sichtbar als Platzhalter */
+.list-item-chosen {
+  opacity: 0.5;
+}
+
+/* Klon, der Maus/Finger folgt */
+.drag-fallback-clone {
+  opacity: 1;
+  box-shadow: var(--shadow-lg), 0 0 24px rgba(0, 0, 0, 0.15);
+  transform: rotate(2deg);
+  cursor: grabbing;
+  z-index: 9999;
+  border-radius: var(--border-radius);
 }
 
 .animate-fade-in {
