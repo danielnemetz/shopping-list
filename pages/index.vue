@@ -233,12 +233,11 @@ const handlePopoverClose = async (save: boolean, updatedItem: any) => {
 const isDragging = ref(false);
 
 const openItems = computed({
-  get: () =>
-    filteredItems([...items.value]).sort(
-      (a, b) => a.position - b.position,
-    ),
+  get: () => {
+    const list = filteredItems([...items.value]);
+    return isDragging.value ? list : list.sort((a, b) => a.position - b.position);
+  },
   set: (val) => {
-    updatePositions(val);
     items.value = val;
   },
 });
@@ -251,6 +250,11 @@ const hasMoreCompleted = computed(
 );
 const loadMoreCompleted = () => {
   fetchCompletedItems(true);
+};
+
+const onDragEnd = () => {
+  isDragging.value = false;
+  updatePositions(openItems.value);
 };
 
 const updatePositions = async (sortedArray: any[]) => {
@@ -322,11 +326,8 @@ const getInitials = (name: string) => {
         :fallback-on-body="true"
         fallback-class="drag-fallback-clone"
         chosen-class="list-item-chosen"
-        :delay="150"
-        :delay-on-touch-only="true"
-        :fallback-tolerance="3"
         @start="isDragging = true"
-        @end="isDragging = false"
+        @end="onDragEnd"
         class="items-list"
         animation="200"
         ghost-class="ghost-item"
