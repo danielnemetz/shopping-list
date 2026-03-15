@@ -163,9 +163,25 @@ export const useSync = () => {
       } catch (err) {}
     });
 
-    // Handle browser online event
+    // Handle browser online/offline events
     if (import.meta.client) {
-      window.addEventListener('online', processQueue);
+      window.addEventListener('online', () => {
+        syncState.isConnected = true;
+        processQueue();
+        if (!globalEventSource || globalEventSource.readyState === EventSource.CLOSED) {
+          connect();
+        }
+      });
+      window.addEventListener('offline', () => {
+        syncState.isConnected = false;
+        if (globalEventSource) {
+          globalEventSource.close();
+          globalEventSource = null;
+        }
+      });
+      
+      // Initialize state
+      syncState.isConnected = navigator.onLine;
     }
   };
 
