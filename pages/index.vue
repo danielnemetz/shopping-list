@@ -248,7 +248,6 @@ const getInitials = (name: string) => {
   <div class="list-wrapper animate-fade-in">
     <TheAppHeader 
       :user="user" 
-      :syncState="syncState"
       :allTagsCount="allTags.length"
       :showFilterBar="showTagFilterBar"
       @toggle-filter="showTagFilterBar = !showTagFilterBar"

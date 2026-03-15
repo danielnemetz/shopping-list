@@ -11,14 +11,12 @@ import {
   Tags as LucideTags,
   Download as LucideDownload,
   Filter as LucideFilter,
-  WifiOff as LucideWifiOff,
 } from "lucide-vue-next";
 import { useClickOutside } from "~/composables/useClickOutside";
 import { usePwa } from "~/composables/usePwa";
 
 const props = defineProps<{
   user: any;
-  syncState: any;
   allTagsCount?: number;
   showFilterBar?: boolean;
 }>();
@@ -60,11 +58,6 @@ const logout = async () => {
 
 <template>
   <div class="header-container">
-    <div class="offline-global-banner" v-if="!syncState.isConnected">
-      <LucideWifiOff :size="14" />
-      <span>Sie sind offline. Die App funktioniert weiterhin (Offline-Cache).</span>
-    </div>
-
     <header class="list-header glass-panel" id="app-header">
     <div class="header-left">
       <div class="menu-container" ref="navMenuRef">
@@ -160,20 +153,6 @@ const logout = async () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-}
-
-.offline-global-banner {
-  background-color: var(--danger-color);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  text-align: center;
-  z-index: 501;
 }
 
 .list-header {

@@ -173,10 +173,6 @@ const onMouseDown = (e: MouseEvent) => onSwipeStart(e.clientX, e);
 const onMouseMove = (e: MouseEvent) => onSwipeMove(e.clientX);
 const onMouseUp = () => onSwipeEnd();
 
-const getInitials = (name: string) => {
-  if (!name) return "?";
-  return name.substring(0, 2).toUpperCase();
-};
 </script>
 
 <template>
@@ -258,13 +254,7 @@ const getInitials = (name: string) => {
           <button class="delete-btn" @click.stop="emit('delete', item)">
             <LucideTrash2 :size="16" />
           </button>
-          <span
-            class="creator-badge"
-            :class="{ online: isOnline }"
-            :title="'Hinzugefügt von ' + item.creatorName"
-          >
-            {{ getInitials(item.creatorName) }}
-          </span>
+          <UserBadge :name="item.creatorName" :online="isOnline" />
         </div>
       </div>
 
@@ -303,12 +293,11 @@ const getInitials = (name: string) => {
         <button
           class="meta-comment-btn"
           @click.stop="emit('click-comments', item.id)"
-          v-if="item.commentCount > 0"
-          :class="{ 'has-comments': item.commentCount > 0 }"
-          :title="item.commentCount + ' Kommentare'"
+          :class="{ 'has-comments': item.commentCount > 0, 'empty-comments': !item.commentCount }"
+          :title="item.commentCount > 0 ? item.commentCount + ' Kommentare' : 'Chat starten'"
         >
           <LucideMessageCircle :size="14" />
-          <span>{{ item.commentCount }}</span>
+          <span v-if="item.commentCount > 0">{{ item.commentCount }}</span>
         </button>
       </div>
     </div>
@@ -521,26 +510,6 @@ const getInitials = (name: string) => {
   min-height: 1.5rem;
 }
 
-.creator-badge {
-  font-size: 0.65rem;
-  background: var(--bg-surface-elevated);
-  padding: 0.15rem 0.4rem;
-  border-radius: 6px;
-  color: var(--text-muted);
-  font-weight: 700;
-  border: 1px solid var(--border-color);
-  opacity: 1 !important; /* Always visible */
-}
-
-.creator-badge.online {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
-  /* Boost saturation for completed items */
-  filter: saturate(1.5) brightness(1.1);
-}
-
 .meta-comment-btn {
   background: transparent;
   border: none;
@@ -559,6 +528,17 @@ const getInitials = (name: string) => {
 .meta-comment-btn.has-comments {
   color: var(--accent-color);
   background: rgba(99, 102, 241, 0.1);
+}
+
+.meta-comment-btn.empty-comments {
+  opacity: 0.5;
+}
+
+.meta-comment-btn.empty-comments:hover,
+.list-item:hover .meta-comment-btn.empty-comments {
+  opacity: 1;
+  color: var(--text-main);
+  background: var(--bg-surface-elevated);
 }
 
 .delete-btn, .edit-btn {
