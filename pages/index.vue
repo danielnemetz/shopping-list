@@ -451,7 +451,7 @@ const getInitials = (name: string) => {
 }
 
 .ghost-item {
-  opacity: 0.3;
+  opacity: var(--opacity-ghost);
   transform: scale(0.95);
 }
 

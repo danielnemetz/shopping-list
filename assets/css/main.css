@@ -25,6 +25,11 @@
   /* Scroll Effects */
   --scroll-fade-size: 50px; /* Adjusts the intensity/depth of the edge fade */
   
+  /* Opacity Tokens */
+  --opacity-swipe: 0.92;      /* Minimum opacity during active swipe */
+  --opacity-completed: 0.65;  /* Standard opacity for checked items */
+  --opacity-ghost: 0.75;      /* Opacity for drag-and-drop placeholder */
+
   /* Blurs & Shadows */
   --glass-blur: 24px;
   --glass-blur-sm: 12px;

@@ -185,9 +185,10 @@ const getInitials = (name: string) => {
     <!-- Main Content -->
     <div 
       class="item-content"
+      :class="{ 'is-swiping': isSwiping }"
       :style="{ 
         transform: isSwiping ? `translateX(${swipeOffset}px)` : 'none',
-        transition: isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
+        transition: isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
       }"
     >
       <div class="item-row">
@@ -369,7 +370,13 @@ const getInitials = (name: string) => {
 
 .completed-item .item-content {
   background: rgba(var(--primary-h), var(--primary-s), 10%, 0.05);
-  opacity: 0.7;
+  opacity: var(--opacity-completed);
+}
+
+.item-content.is-swiping {
+  opacity: var(--opacity-swipe);
+  background: var(--bg-surface); /* More solid background during swipe */
+  box-shadow: var(--shadow-md), 0 0 20px rgba(0,0,0,0.1);
 }
 
 .item-row {
