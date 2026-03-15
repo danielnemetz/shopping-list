@@ -248,7 +248,8 @@ const logout = async () => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  margin-left: max(1rem, auto); /* Pushes the right side away from the left side */
 }
 
 .filter-toggle-btn {
