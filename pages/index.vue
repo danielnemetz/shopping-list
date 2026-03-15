@@ -25,20 +25,7 @@ const selectedFilterTags = ref<number[]>([]);
 const showTagPopover = ref(false);
 const activeTaggingItem = ref<any>(null);
 
-const showTagFilterBar = ref(true);
-
-if (import.meta.client) {
-  const savedState = localStorage.getItem('listly_show_filterbar');
-  if (savedState !== null) {
-    showTagFilterBar.value = savedState === 'true';
-  }
-}
-
-watch(showTagFilterBar, (newVal) => {
-  if (import.meta.client) {
-    localStorage.setItem('listly_show_filterbar', String(newVal));
-  }
-});
+const showTagFilterBar = useUiStorage('show_filterbar', true);
 
 const fetchTags = async () => {
   try {

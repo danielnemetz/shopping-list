@@ -63,6 +63,7 @@
     "uncompleted": "hat reaktiviert",
     "deleted": "hat gelöscht",
     "renamed": "hat umbenannt",
+    "reordered": "hat Reihenfolge geändert für",
     "tagCreated": "hat den Tag erstellt",
     "tagRenamed": "hat den Tag umbenannt in",
     "tagDeleted": "hat den Tag gelöscht",
@@ -77,7 +78,16 @@
     "empty": "Noch keine Aktivitäten vorhanden.",
     "emptyHint": "Füge Einträge zur Liste hinzu, um hier etwas zu sehen.",
     "unknown": "Unbekannt",
-    "loadOlder": "Ältere laden..."
+    "loadOlder": "Ältere laden...",
+    "filterAction": "Aktion",
+    "filterUser": "Person",
+    "filterAllActions": "Alle Aktionen",
+    "filterGroupItems": "Einträge",
+    "filterGroupTags": "Tags",
+    "filterAllUsers": "Alle",
+    "filterSearch": "Suche",
+    "filterSearchPlaceholder": "Name suchen...",
+    "toggleFilter": "Filter ein-/ausblenden"
   },
   "tags": {
     "title": "Tag-Verwaltung",

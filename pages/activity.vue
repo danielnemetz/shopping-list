@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import {
   LucideChevronLeft,
   LucideActivity,
   LucideAlertCircle,
   LucideLoader,
-  LucideArrowRight,
+  LucideFilter,
+  LucideSearch,
 } from "lucide-vue-next";
 
 definePageMeta({
@@ -40,6 +41,45 @@ const isLoading = ref(true);
 const page = ref(1);
 const totalPages = ref(1);
 const hasMore = ref(false);
+const filterAction = ref<string>("");
+const filterUserId = ref<string>("");
+const filterSearch = ref<string>("");
+const filterUsers = ref<{ id: string; name: string }[]>([]);
+
+const showActivityFilterBar = useUiStorage('activity_show_filterbar', false);
+
+const ITEM_ACTIONS = [
+  { value: "added", labelKey: "activity.added" },
+  { value: "completed", labelKey: "activity.completed" },
+  { value: "uncompleted", labelKey: "activity.uncompleted" },
+  { value: "deleted", labelKey: "activity.deleted" },
+  { value: "renamed", labelKey: "activity.renamed" },
+] as const;
+
+const TAG_ACTIONS = [
+  { value: "tag_created", labelKey: "activity.tagCreated" },
+  { value: "tag_updated", labelKey: "activity.tagRenamed" },
+  { value: "tag_deleted", labelKey: "activity.tagDeleted" },
+  { value: "tags_changed", labelKey: "activity.tagsChanged" },
+] as const;
+
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+watch(filterSearch, () => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    fetchActivities();
+  }, 350);
+});
+
+const buildActivitiesUrl = (pageNum: number) => {
+  const params = new URLSearchParams();
+  params.set("page", String(pageNum));
+  params.set("limit", "20");
+  if (filterAction.value) params.set("action", filterAction.value);
+  if (filterUserId.value) params.set("userId", filterUserId.value);
+  if (filterSearch.value.trim()) params.set("search", filterSearch.value.trim());
+  return `/api/activities?${params.toString()}`;
+};
 
 const fetchActivities = async (loadMore = false) => {
   if (!loadMore) {
@@ -50,8 +90,11 @@ const fetchActivities = async (loadMore = false) => {
   }
 
   try {
-    const data = (await $fetch(`/api/activities?page=${page.value}&limit=20`)) as any;
+    const data = (await $fetch(buildActivitiesUrl(page.value)) as any);
     if (data.success) {
+      if (data.filterOptions?.users) {
+        filterUsers.value = data.filterOptions.users;
+      }
       const newActivities = data.activities as Activity[];
       if (loadMore) {
         activities.value = [...activities.value, ...newActivities];
@@ -66,6 +109,10 @@ const fetchActivities = async (loadMore = false) => {
   } finally {
     isLoading.value = false;
   }
+};
+
+const onFilterChange = () => {
+  fetchActivities();
 };
 
 onMounted(() => {
@@ -84,6 +131,8 @@ const getActionIcon = (action: string) => {
       return "🗑️";
     case "renamed":
       return "✏️";
+    case "reordered":
+      return "↕️";
     case "tag_created":
     case "tag_updated":
       return "🏷️";
@@ -108,6 +157,8 @@ const getActionText = (action: string) => {
       return t('activity.deleted');
     case "renamed":
       return t('activity.renamed');
+    case "reordered":
+      return t('activity.reordered');
     case "tag_created":
       return t('activity.tagCreated');
     case "tag_updated":
@@ -148,9 +199,77 @@ const getActionText = (action: string) => {
         </button>
         <h2><LucideActivity :size="20" class="mr-2 inline" />{{ $t('activity.title') }}</h2>
       </div>
+      <button
+        class="btn-icon"
+        :class="{ active: showActivityFilterBar }"
+        :title="$t('activity.toggleFilter')"
+        @click="showActivityFilterBar = !showActivityFilterBar"
+      >
+        <LucideFilter :size="22" />
+      </button>
     </header>
 
     <main class="list-content p-4">
+      <div v-if="showActivityFilterBar" class="filter-bar glass-panel">
+        <label class="filter-group filter-group-search">
+          <span class="filter-label">{{ $t('activity.filterSearch') }}</span>
+          <div class="search-input-wrapper">
+            <LucideSearch :size="16" class="search-icon" />
+            <input
+              v-model="filterSearch"
+              type="text"
+              class="filter-input"
+              :placeholder="$t('activity.filterSearchPlaceholder')"
+            />
+          </div>
+        </label>
+        <label class="filter-group">
+          <span class="filter-label">{{ $t('activity.filterAction') }}</span>
+          <select
+            v-model="filterAction"
+            class="filter-select"
+            @change="onFilterChange"
+          >
+            <option value="">{{ $t('activity.filterAllActions') }}</option>
+            <optgroup :label="$t('activity.filterGroupItems')">
+              <option
+                v-for="opt in ITEM_ACTIONS"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ $t(opt.labelKey) }}
+              </option>
+            </optgroup>
+            <optgroup :label="$t('activity.filterGroupTags')">
+              <option
+                v-for="opt in TAG_ACTIONS"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ $t(opt.labelKey) }}
+              </option>
+            </optgroup>
+          </select>
+        </label>
+        <label class="filter-group">
+          <span class="filter-label">{{ $t('activity.filterUser') }}</span>
+          <select
+            v-model="filterUserId"
+            class="filter-select"
+            @change="onFilterChange"
+          >
+            <option value="">{{ $t('activity.filterAllUsers') }}</option>
+            <option
+              v-for="u in filterUsers"
+              :key="u.id"
+              :value="u.id"
+            >
+              {{ u.name }}
+            </option>
+          </select>
+        </label>
+      </div>
+
       <div
         v-if="isLoading && activities.length === 0"
         class="flex flex-col items-center justify-center p-8 opacity-70"
@@ -249,11 +368,99 @@ const getActionText = (action: string) => {
   align-items: center;
 }
 
+.list-header .btn-icon.active {
+  background: var(--accent-color);
+  color: white;
+  border-color: transparent;
+}
+
 .list-content {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 140px;
+  flex: 0 0 auto;
+}
+
+.filter-group-search {
+  flex: 1 1 100%;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.filter-select:focus {
+  border-color: var(--accent-color);
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.filter-input:focus {
+  border-color: var(--accent-color);
+}
+
+.filter-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .activities-timeline {

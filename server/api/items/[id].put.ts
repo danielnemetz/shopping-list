@@ -82,7 +82,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Log activity
+  // Log activity: each change type gets its own entry (so e.g. rename always lands)
   if (typeof updateData.isCompleted === 'boolean') {
     await db.insert(activities).values({
       userId: user.userId,
@@ -90,8 +90,9 @@ export default defineEventHandler(async (event) => {
       itemName: currentItem.text,
       createdAt: new Date(),
     }).run();
-  } else if (updateData.text && updateData.text !== currentItem.text) {
-     await db.insert(activities).values({
+  }
+  if (updateData.text !== undefined && updateData.text !== currentItem.text) {
+    await db.insert(activities).values({
       userId: user.userId,
       action: 'renamed',
       itemName: `${currentItem.text} -> ${updateData.text}`,

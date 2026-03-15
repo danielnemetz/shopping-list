@@ -63,6 +63,7 @@
     "uncompleted": "przywrócił(a)",
     "deleted": "usunął(a)",
     "renamed": "zmienił(a) nazwę",
+    "reordered": "zmienił(a) kolejność",
     "tagCreated": "utworzył(a) tag",
     "tagRenamed": "zmienił(a) nazwę tagu na",
     "tagDeleted": "usunął(a) tag",
@@ -77,7 +78,16 @@
     "empty": "Brak aktywności.",
     "emptyHint": "Dodaj pozycje do listy, aby zobaczyć tu aktywność.",
     "unknown": "Nieznany",
-    "loadOlder": "Załaduj starsze..."
+    "loadOlder": "Załaduj starsze...",
+    "filterAction": "Akcja",
+    "filterUser": "Osoba",
+    "filterAllActions": "Wszystkie akcje",
+    "filterGroupItems": "Pozycje",
+    "filterGroupTags": "Tagi",
+    "filterAllUsers": "Wszystkie",
+    "filterSearch": "Szukaj",
+    "filterSearchPlaceholder": "Szukaj nazwy...",
+    "toggleFilter": "Pokaż/ukryj filtry"
   },
   "tags": {
     "title": "Zarządzanie tagami",

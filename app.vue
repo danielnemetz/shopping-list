@@ -1,9 +1,23 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { WifiOff as LucideWifiOff } from "lucide-vue-next";
+import { useTheme } from "~/composables/useTheme";
 
+const route = useRoute();
 const { connect, state: syncState } = useSync();
+const { applyTheme } = useTheme();
+
+const isPublicRoute = computed(() => {
+  const path = route.path;
+  return path === "/login" || path.startsWith("/auth/");
+});
+
+const showOfflineBanner = computed(
+  () => !isPublicRoute.value && !syncState.isConnected
+);
 
 onMounted(() => {
+  applyTheme();
   connect();
 });
 </script>
@@ -11,7 +25,7 @@ onMounted(() => {
 <template>
   <div class="app-container">
     <VitePwaManifest />
-    <div class="offline-global-banner" v-if="!syncState.isConnected">
+    <div class="offline-global-banner" v-if="showOfflineBanner">
       <LucideWifiOff :size="14" />
       <span>{{ $t('common.offlineBanner') }}</span>
     </div>

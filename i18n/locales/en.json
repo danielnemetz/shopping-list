@@ -63,6 +63,7 @@
     "uncompleted": "reopened",
     "deleted": "deleted",
     "renamed": "renamed",
+    "reordered": "reordered",
     "tagCreated": "created the tag",
     "tagRenamed": "renamed the tag to",
     "tagDeleted": "deleted the tag",
@@ -77,7 +78,16 @@
     "empty": "No activity yet.",
     "emptyHint": "Add items to the list to see activity here.",
     "unknown": "Unknown",
-    "loadOlder": "Load older..."
+    "loadOlder": "Load older...",
+    "filterAction": "Action",
+    "filterUser": "Person",
+    "filterAllActions": "All actions",
+    "filterGroupItems": "Items",
+    "filterGroupTags": "Tags",
+    "filterAllUsers": "All",
+    "filterSearch": "Search",
+    "filterSearchPlaceholder": "Search name...",
+    "toggleFilter": "Show/hide filters"
   },
   "tags": {
     "title": "Tag management",

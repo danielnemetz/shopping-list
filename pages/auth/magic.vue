@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import {
+  Loader as LucideLoader,
+  XCircle as LucideXCircle,
+} from "lucide-vue-next";
+
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();

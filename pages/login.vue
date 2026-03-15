@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, onMounted } from "vue";
+import {
+  ShoppingCart as LucideShoppingCart,
+  Mail as LucideMail,
+  Send as LucideSend,
+  Loader as LucideLoader,
+  KeyRound as LucideKeyRound,
+  CheckCircle as LucideCheckCircle,
+  ArrowLeft as LucideArrowLeft,
+} from "lucide-vue-next";
 
 const router = useRouter();
 const route = useRoute();
