@@ -119,15 +119,16 @@ onUnmounted(() => {
 
 <template>
   <div class="reaction-trigger-wrap" ref="reactionMenuRef">
-    <button
-      type="button"
-      class="reaction-trigger-btn"
-      :class="{ active: reactionMenuOpen }"
-      :title="$t('comments.addReaction')"
-      @click="reactionMenuOpen = !reactionMenuOpen"
-    >
-      <LucideSmile :size="16" />
-    </button>
+    <TheTooltip :content="$t('messages.addReaction')">
+      <button
+        type="button"
+        class="reaction-trigger-btn"
+        :class="{ active: reactionMenuOpen }"
+        @click="reactionMenuOpen = !reactionMenuOpen"
+      >
+        <LucideSmile :size="16" />
+      </button>
+    </TheTooltip>
 
     <Teleport to="body">
       <Transition name="reaction-popup">
@@ -147,15 +148,16 @@ onUnmounted(() => {
           >
             {{ emoji }}
           </button>
-          <button
-            type="button"
-            class="reaction-more-btn"
-            :class="{ active: emojiPickerTarget }"
-            :title="$t('comments.reactWithEmoji')"
-            @click="emojiPickerTarget = !emojiPickerTarget"
-          >
-            <LucidePlus :size="14" />
-          </button>
+          <TheTooltip :content="$t('messages.reactWithEmoji')">
+            <button
+              type="button"
+              class="reaction-more-btn"
+              :class="{ active: emojiPickerTarget }"
+              @click="emojiPickerTarget = !emojiPickerTarget"
+            >
+              <LucidePlus :size="14" />
+            </button>
+          </TheTooltip>
           <Transition name="picker">
             <div v-if="emojiPickerTarget" class="reaction-picker-dropdown">
               <ClientOnly>
@@ -163,7 +165,7 @@ onUnmounted(() => {
                   :native="true"
                   :theme="emojiPickerTheme"
                   :hide-search="false"
-                  :static-texts="{ placeholder: $t('comments.emojiSearch') }"
+                  :static-texts="{ placeholder: $t('messages.emojiSearch') }"
                   @select="onSelectReactionEmoji"
                 />
                 <template #fallback><div class="emoji-picker-placeholder" /></template>

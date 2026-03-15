@@ -11,11 +11,11 @@ export default defineEventHandler(async (event) => {
   const itemId = getRouterParam(event, 'id');
   const commentIdParam = getRouterParam(event, 'commentId');
   if (!itemId || !commentIdParam) {
-    throw createError({ statusCode: 400, statusMessage: 'Item ID and Comment ID are required' });
+    throw createError({ statusCode: 400, statusMessage: 'Item ID and message ID are required' });
   }
   const commentId = parseInt(commentIdParam, 10);
   if (Number.isNaN(commentId)) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid comment ID' });
+    throw createError({ statusCode: 400, statusMessage: 'Invalid message ID' });
   }
 
   const body = await readBody(event);
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
 
   const comment = await db.select().from(comments).where(eq(comments.id, commentId)).get();
   if (!comment || comment.itemId !== itemId) {
-    throw createError({ statusCode: 404, statusMessage: 'Comment not found' });
+    throw createError({ statusCode: 404, statusMessage: 'Message not found' });
   }
 
   const { added } = toggleReaction('comment', String(commentId), user.userId, emoji);

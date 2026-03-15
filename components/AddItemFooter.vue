@@ -97,23 +97,26 @@ const handleAddItem = () => {
       </div>
 
       <div class="action-buttons">
-        <button
-          type="button"
-          class="footer-btn tag-toggle-btn"
-          :class="{ active: showTagInput }"
-          @click="showTagInput = !showTagInput"
-          :title="$t('addItem.addTags')"
-        >
-          <LucideTag :size="20" />
-        </button>
-        <button
-          type="submit"
-          class="footer-btn add-btn"
-          :disabled="!newItemText.trim() || isSubmitting"
-        >
-          <LucidePlus :size="24" v-if="!isSubmitting" />
-          <LucideLoader :size="24" class="spin" v-else />
-        </button>
+        <TheTooltip :content="$t('addItem.addTags')">
+          <button
+            type="button"
+            class="footer-btn tag-toggle-btn"
+            :class="{ active: showTagInput }"
+            @click="showTagInput = !showTagInput"
+          >
+            <LucideTag :size="20" />
+          </button>
+        </TheTooltip>
+        <TheTooltip :content="$t('addItem.addItem')">
+          <button
+            type="submit"
+            class="footer-btn add-btn"
+            :disabled="!newItemText.trim() || isSubmitting"
+          >
+            <LucidePlus :size="24" v-if="!isSubmitting" />
+            <LucideLoader :size="24" class="spin" v-else />
+          </button>
+        </TheTooltip>
       </div>
     </form>
   </footer>

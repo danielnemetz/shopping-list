@@ -6,7 +6,8 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "unknown": "Unbekannt",
-    "offlineBanner": "Du bist offline. Die App funktioniert weiterhin."
+    "offlineBanner": "Du bist offline. Die App funktioniert weiterhin.",
+    "joinedDate": "Beitrittsdatum"
   },
   "index": {
     "deleteConfirm": "Möchtest du \"{text}\" wirklich löschen?",
@@ -39,11 +40,11 @@
     "oops": "Hoppla!",
     "backToLogin": "Zurück zum Login"
   },
-  "comments": {
-    "title": "Kommentare",
+  "messages": {
+    "title": "Nachrichten",
     "back": "Zurück",
-    "noComments": "Noch keine Kommentare.",
-    "startConversation": "Starte die Konversation!",
+    "noMessages": "Noch keine Nachrichten.",
+    "startConversation": "Starte die Unterhaltung!",
     "unknown": "Unbekannt",
     "me": "Ich",
     "justNow": "gerade eben",
@@ -57,7 +58,8 @@
     "messagePlaceholder": "Nachricht schreiben...",
     "emojiInsert": "Emoji einfügen",
     "addReaction": "Reaktion hinzufügen",
-    "reactWithEmoji": "Mit beliebigem Emoji reagieren"
+    "reactWithEmoji": "Mit beliebigem Emoji reagieren",
+    "send": "Senden"
   },
   "activity": {
     "added": "hat hinzugefügt",
@@ -114,6 +116,7 @@
   },
   "header": {
     "menu": "Menü",
+    "userMenu": "Benutzer-Menü",
     "activities": "Aktivitäten",
     "manageTags": "Tags verwalten",
     "installApp": "App installieren",
@@ -136,7 +139,7 @@
     "move": "Verschieben",
     "edit": "Bearbeiten",
     "tagPlaceholder": "Tag...",
-    "commentsCount": "{count} Kommentare",
+    "messagesCount": "{count} Nachrichten",
     "startChat": "Chat starten"
   },
   "tagPopover": {
@@ -147,6 +150,7 @@
   "addItem": {
     "tagPlaceholder": "Tag eingeben...",
     "addPlaceholder": "Neuen Eintrag hinzufügen...",
-    "addTags": "Tags hinzufügen"
+    "addTags": "Tags hinzufügen",
+    "addItem": "Eintrag hinzufügen"
   }
 }

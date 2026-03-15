@@ -16,6 +16,7 @@ definePageMeta({
 
 const router = useRouter();
 const { t, locale } = useI18n();
+const { isOnline } = useSync();
 const goBack = () => router.push("/");
 
 const localeTag = computed(() => {
@@ -194,19 +195,22 @@ const getActionText = (action: string) => {
   <div class="list-wrapper animate-fade-in">
     <header class="list-header glass-panel">
       <div class="header-left">
-        <button class="btn-icon" @click="goBack" :title="$t('activity.back')">
+        <TheTooltip :content="$t('activity.back')">
+        <button class="btn-icon" @click="goBack">
           <LucideChevronLeft :size="24" />
         </button>
+      </TheTooltip>
         <h2><LucideActivity :size="20" class="mr-2 inline" />{{ $t('activity.title') }}</h2>
       </div>
-      <button
-        class="btn-icon"
-        :class="{ active: showActivityFilterBar }"
-        :title="$t('activity.toggleFilter')"
-        @click="showActivityFilterBar = !showActivityFilterBar"
-      >
-        <LucideFilter :size="22" />
-      </button>
+      <TheTooltip :content="$t('activity.toggleFilter')">
+        <button
+          class="btn-icon"
+          :class="{ active: showActivityFilterBar }"
+          @click="showActivityFilterBar = !showActivityFilterBar"
+        >
+          <LucideFilter :size="22" />
+        </button>
+      </TheTooltip>
     </header>
 
     <main class="list-content p-4">
@@ -297,9 +301,10 @@ const getActionText = (action: string) => {
         >
           <div class="activity-header flex justify-between items-start mb-2">
             <span class="activity-user font-semibold flex items-center gap-2">
-              <span class="avatar-small">{{
-                activity.user?.name.substring(0, 2).toUpperCase() || "?"
-              }}</span>
+              <UserBadge
+                :name="activity.user?.name ?? null"
+                :online="isOnline(activity.user?.id ?? null)"
+              />
               {{ activity.user?.name || $t('activity.unknown') }}
             </span>
             <span class="activity-time text-xs opacity-60">{{
@@ -480,18 +485,6 @@ const getActionText = (action: string) => {
 
 .activity-card:hover {
   transform: translateY(-2px);
-}
-
-.avatar-small {
-  background-color: var(--accent-color);
-  color: white;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
 }
 
 .spin {

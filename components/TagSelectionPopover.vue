@@ -64,9 +64,11 @@ const close = (save: boolean) => {
       <div class="tag-popover-panel glass-panel" @click.stop>
         <div class="tag-popover-header">
           <h3>{{ $t('tagPopover.title', { text: item?.text }) }}</h3>
-          <button class="tag-popover-close" @click="close(true)">
-            <LucideX :size="20" />
-          </button>
+          <TheTooltip :content="$t('common.cancel')">
+            <button class="tag-popover-close" @click="close(true)">
+              <LucideX :size="20" />
+            </button>
+          </TheTooltip>
         </div>
         
         <div class="tag-popover-content">
@@ -78,9 +80,11 @@ const close = (save: boolean) => {
               :placeholder="$t('tagPopover.addTagPlaceholder')"
               @keydown.enter.prevent="addTag"
             />
+            <TheTooltip :content="$t('addItem.addTags')">
             <button class="popover-add-btn" @click="addTag" :disabled="!popoverTagInput.trim()">
               <LucidePlus :size="18" />
             </button>
+          </TheTooltip>
           </div>
 
           <div class="tag-grid">

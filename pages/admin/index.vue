@@ -6,12 +6,16 @@
         <h2>Listly <span class="admin-badge">Admin</span></h2>
       </div>
       <div class="header-right">
-        <NuxtLink to="/tags" class="btn-text" title="Tags verwalten">
-          <LucideTags :size="20" />
-        </NuxtLink>
-        <button class="btn-text" @click="handleLogout" title="Logout">
-          <LucideLogOut :size="20" />
-        </button>
+        <TheTooltip :content="$t('header.manageTags')">
+          <NuxtLink to="/tags" class="btn-text">
+            <LucideTags :size="20" />
+          </NuxtLink>
+        </TheTooltip>
+        <TheTooltip :content="$t('header.logout')">
+          <button class="btn-text" @click="handleLogout">
+            <LucideLogOut :size="20" />
+          </button>
+        </TheTooltip>
       </div>
     </header>
 
@@ -91,9 +95,11 @@
               <span class="user-email">{{ user.email }}</span>
             </div>
             <div class="item-meta">
-              <span class="creator-badge" title="Joined Date">
-                {{ new Date(user.createdAt).toLocaleDateString() }}
-              </span>
+              <TheTooltip :content="$t('common.joinedDate')">
+                <span class="creator-badge">
+                  {{ new Date(user.createdAt).toLocaleDateString() }}
+                </span>
+              </TheTooltip>
             </div>
           </div>
         </div>

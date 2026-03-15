@@ -6,7 +6,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "unknown": "Unknown",
-    "offlineBanner": "You are offline. The app continues to work."
+    "offlineBanner": "You are offline. The app continues to work.",
+    "joinedDate": "Joined"
   },
   "index": {
     "deleteConfirm": "Do you really want to delete \"{text}\"?",
@@ -39,10 +40,10 @@
     "oops": "Oops!",
     "backToLogin": "Back to login"
   },
-  "comments": {
-    "title": "Comments",
+  "messages": {
+    "title": "Messages",
     "back": "Back",
-    "noComments": "No comments yet.",
+    "noMessages": "No messages yet.",
     "startConversation": "Start the conversation!",
     "unknown": "Unknown",
     "me": "Me",
@@ -57,7 +58,8 @@
     "messagePlaceholder": "Write a message...",
     "emojiInsert": "Insert emoji",
     "addReaction": "Add reaction",
-    "reactWithEmoji": "React with any emoji"
+    "reactWithEmoji": "React with any emoji",
+    "send": "Send"
   },
   "activity": {
     "added": "added",
@@ -114,6 +116,7 @@
   },
   "header": {
     "menu": "Menu",
+    "userMenu": "User menu",
     "activities": "Activity",
     "manageTags": "Manage tags",
     "installApp": "Install app",
@@ -136,7 +139,7 @@
     "move": "Move",
     "edit": "Edit",
     "tagPlaceholder": "Tag...",
-    "commentsCount": "{count} comments",
+    "messagesCount": "{count} messages",
     "startChat": "Start chat"
   },
   "tagPopover": {
@@ -147,6 +150,7 @@
   "addItem": {
     "tagPlaceholder": "Enter tag...",
     "addPlaceholder": "Add new item...",
-    "addTags": "Add tags"
+    "addTags": "Add tags",
+    "addItem": "Add item"
   }
 }

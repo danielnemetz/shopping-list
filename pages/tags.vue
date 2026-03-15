@@ -134,9 +134,11 @@ const createTag = async () => {
     <header class="list-header glass-panel">
       <div class="container-centered header-content">
         <div class="header-left">
-          <NuxtLink to="/" class="btn-icon" :title="$t('common.back')">
+          <TheTooltip :content="$t('common.back')">
+          <NuxtLink to="/" class="btn-icon">
             <LucideArrowLeft :size="24" />
           </NuxtLink>
+        </TheTooltip>
           <h2><LucideTag :size="20" class="mr-2 inline" />{{ $t('tags.title') }}</h2>
         </div>
       </div>
@@ -166,20 +168,22 @@ const createTag = async () => {
                   @keyup.esc="cancelEdit"
                 />
                 <div class="edit-actions">
-                  <button
-                    @click="saveEdit(tag)"
-                    class="btn-icon success"
-                    :title="$t('tags.save')"
-                  >
-                    <LucideCheck :size="18" />
-                  </button>
-                  <button
-                    @click="cancelEdit"
-                    class="btn-icon danger"
-                    :title="$t('tags.cancel')"
-                  >
-                    <LucideX :size="18" />
-                  </button>
+                  <TheTooltip :content="$t('tags.save')">
+                    <button
+                      @click="saveEdit(tag)"
+                      class="btn-icon success"
+                    >
+                      <LucideCheck :size="18" />
+                    </button>
+                  </TheTooltip>
+                  <TheTooltip :content="$t('tags.cancel')">
+                    <button
+                      @click="cancelEdit"
+                      class="btn-icon danger"
+                    >
+                      <LucideX :size="18" />
+                    </button>
+                  </TheTooltip>
                 </div>
               </div>
               <div v-else class="view-mode">
@@ -188,20 +192,22 @@ const createTag = async () => {
                   {{ tag.name }}
                 </span>
                 <div class="tag-actions">
-                  <button
-                    @click="startEdit(tag)"
-                    class="btn-icon"
-                    :title="$t('tags.edit')"
-                  >
-                    <LucidePencil :size="16" />
-                  </button>
-                  <button
-                    @click="deleteTag(tag.id)"
-                    class="btn-icon danger"
-                    :title="$t('tags.delete')"
-                  >
-                    <LucideTrash2 :size="16" />
-                  </button>
+                  <TheTooltip :content="$t('tags.edit')">
+                    <button
+                      @click="startEdit(tag)"
+                      class="btn-icon"
+                    >
+                      <LucidePencil :size="16" />
+                    </button>
+                  </TheTooltip>
+                  <TheTooltip :content="$t('tags.delete')">
+                    <button
+                      @click="deleteTag(tag.id)"
+                      class="btn-icon danger"
+                    >
+                      <LucideTrash2 :size="16" />
+                    </button>
+                  </TheTooltip>
                 </div>
               </div>
             </li>
@@ -236,15 +242,16 @@ const createTag = async () => {
               :disabled="isCreating"
             />
           </div>
+          <TheTooltip :content="$t('tags.create')">
           <button
             type="submit"
             class="footer-btn add-btn"
             :disabled="isCreating || !newTagName.trim()"
-            :title="$t('tags.create')"
           >
             <LucidePlus :size="24" v-if="!isCreating" />
             <LucideLoader :size="24" class="spin" v-else />
           </button>
+        </TheTooltip>
         </form>
       </div>
     </footer>

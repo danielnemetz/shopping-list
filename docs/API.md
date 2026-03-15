@@ -43,7 +43,7 @@ Die meisten Endpoints erwarten eine **Session per Cookie** (nach Login über `PO
 ## Überblick Endpoints (siehe OpenAPI für Details)
 
 - **Auth:** `GET /api/auth/me`, `POST /api/auth/request-code`, `POST /api/auth/verify`, `POST /api/auth/logout`
-- **Items:** `GET/POST /api/items`, `GET/PUT/DELETE /api/items/:id`, `GET/POST /api/items/:id/comments`
+- **Items:** `GET/POST /api/items`, `GET/PUT/DELETE /api/items/:id`, `GET/POST /api/items/:id/comments` (Nachrichten/Chat pro Eintrag)
 - **Tags:** `GET/POST /api/tags`, `PUT/DELETE /api/tags/:id`
 - **Activities:** `GET /api/activities` (Filter: `action`, `userId`, `search`, Pagination)
 

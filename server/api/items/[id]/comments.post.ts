@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
   if (!body?.text?.trim()) {
-    throw createError({ statusCode: 400, statusMessage: 'Comment text is required' });
+    throw createError({ statusCode: 400, statusMessage: 'Message text is required' });
   }
 
   await db.insert(comments).values({

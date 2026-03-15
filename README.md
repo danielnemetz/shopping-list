@@ -8,7 +8,7 @@ Listly is a modern, fast, and simple shared shopping list application designed f
 - **📱 PWA Ready:** Installable on iOS and Android for a native app-like experience.
 - **🔄 Shared & Synced:** Add, toggle, and manage items together with your family.
 - **🏷️ Tagging System:** Organize items by categories or stores with inline colored tags.
-- **💬 Item Comments:** Discuss specific items directly in a chat-like thread.
+- **💬 Nachrichten pro Eintrag:** Zu jedem Eintrag einen Chat mit Nachrichten.
 - **📖 Activity Log:** Keep track of who added, completed, or deleted items.
 - **✋ Drag & Drop:** Easily reorder your open items.
 - **👑 Admin Dashboard:** Manage users, invite new family members, and manage global tags.

@@ -6,7 +6,8 @@
     "delete": "Usuń",
     "edit": "Edytuj",
     "unknown": "Nieznany",
-    "offlineBanner": "Jesteś offline. Aplikacja nadal działa."
+    "offlineBanner": "Jesteś offline. Aplikacja nadal działa.",
+    "joinedDate": "Data dołączenia"
   },
   "index": {
     "deleteConfirm": "Czy na pewno chcesz usunąć \"{text}\"?",
@@ -39,10 +40,10 @@
     "oops": "Ups!",
     "backToLogin": "Wróć do logowania"
   },
-  "comments": {
-    "title": "Komentarze",
+  "messages": {
+    "title": "Wiadomości",
     "back": "Wstecz",
-    "noComments": "Brak komentarzy.",
+    "noMessages": "Brak wiadomości.",
     "startConversation": "Zacznij rozmowę!",
     "unknown": "Nieznany",
     "me": "Ja",
@@ -57,7 +58,8 @@
     "messagePlaceholder": "Napisz wiadomość...",
     "emojiInsert": "Wstaw emoji",
     "addReaction": "Dodaj reakcję",
-    "reactWithEmoji": "Zareaguj dowolnym emoji"
+    "reactWithEmoji": "Zareaguj dowolnym emoji",
+    "send": "Wyślij"
   },
   "activity": {
     "added": "dodał(a)",
@@ -114,6 +116,7 @@
   },
   "header": {
     "menu": "Menu",
+    "userMenu": "Menu użytkownika",
     "activities": "Aktywność",
     "manageTags": "Zarządzaj tagami",
     "installApp": "Zainstaluj aplikację",
@@ -136,7 +139,7 @@
     "move": "Przesuń",
     "edit": "Edytuj",
     "tagPlaceholder": "Tag...",
-    "commentsCount": "{count} komentarzy",
+    "messagesCount": "{count} wiadomości",
     "startChat": "Rozpocznij czat"
   },
   "tagPopover": {
@@ -147,6 +150,7 @@
   "addItem": {
     "tagPlaceholder": "Wpisz tag...",
     "addPlaceholder": "Dodaj nową pozycję...",
-    "addTags": "Dodaj tagi"
+    "addTags": "Dodaj tagi",
+    "addItem": "Dodaj pozycję"
   }
 }

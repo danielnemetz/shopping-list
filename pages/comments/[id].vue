@@ -167,7 +167,7 @@ const sendComment = async () => {
     createdAt: new Date().toISOString(),
     user: {
       id: currentUser.value?.id,
-      name: currentUser.value?.name || t('comments.me')
+      name: currentUser.value?.name || t('messages.me')
     },
     reactions: [],
   };
@@ -210,10 +210,10 @@ const formatTime = (dateStr: string) => {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return t('comments.justNow');
-  if (minutes < 60) return t('comments.minutesAgo', { minutes });
-  if (hours < 24) return t('comments.hoursAgo', { hours });
-  if (days < 7) return t('comments.daysAgo', { days });
+  if (minutes < 1) return t('messages.justNow');
+  if (minutes < 60) return t('messages.minutesAgo', { minutes });
+  if (hours < 24) return t('messages.hoursAgo', { hours });
+  if (days < 7) return t('messages.daysAgo', { days });
   return date.toLocaleDateString(localeTag.value, { day: "2-digit", month: "2-digit" });
 };
 
@@ -221,8 +221,8 @@ const typingText = computed(() => {
   if (typingUsers.value.length === 0) return '';
   const names = typingUsers.value.map(u => u.name).join(', ');
   return typingUsers.value.length === 1
-    ? t('comments.typing_one', { name: names })
-    : t('comments.typing_other', { names });
+    ? t('messages.typing_one', { name: names })
+    : t('messages.typing_other', { names });
 });
 
 const isOwnMessage = (comment: any) => comment.user?.id === currentUser.value?.id;
@@ -294,12 +294,14 @@ onMounted(async () => {
     <header class="list-header glass-panel">
       <div class="container-centered header-content">
         <div class="header-left">
-          <NuxtLink to="/" class="btn-icon" :title="$t('comments.back')">
-            <LucideChevronLeft :size="24" />
-          </NuxtLink>
+          <TheTooltip :content="$t('messages.back')">
+            <NuxtLink to="/" class="btn-icon">
+              <LucideChevronLeft :size="24" />
+            </NuxtLink>
+          </TheTooltip>
           <h2>
             <LucideMessageCircle :size="20" class="mr-2 inline" />
-            <span class="header-title">{{ item ? item.text : $t('comments.title') }}</span>
+            <span class="header-title">{{ item ? item.text : $t('messages.title') }}</span>
           </h2>
         </div>
       </div>
@@ -316,8 +318,8 @@ onMounted(async () => {
 
       <div v-if="comments.length === 0" class="empty-state">
         <LucideMessageCircle :size="48" />
-        <p>{{ $t('comments.noComments') }}</p>
-        <p class="text-muted">{{ $t('comments.startConversation') }}</p>
+        <p>{{ $t('messages.noMessages') }}</p>
+        <p class="text-muted">{{ $t('messages.startConversation') }}</p>
       </div>
 
       <div 
@@ -341,31 +343,34 @@ onMounted(async () => {
             class="message-author" 
             v-if="!isOwnMessage(comment) && (index === 0 || comments[index - 1]?.user?.id !== comment.user?.id)"
           >
-            {{ comment.user?.name || $t('comments.unknown') }}
+            {{ comment.user?.name || $t('messages.unknown') }}
           </div>
 
           <div class="message-bubble-row">
             <div class="message-bubble" :class="{ 'is-pending': isPending(comment.id) }">
               {{ comment.text }}
             </div>
-            <div v-if="isPending(comment.id)" class="pending-icon" :title="$t('comments.syncing')">
-              <LucideCloudUpload :size="12" />
-            </div>
+            <TheTooltip v-if="isPending(comment.id)" :content="$t('messages.syncing')">
+              <div class="pending-icon">
+                <LucideCloudUpload :size="12" />
+              </div>
+            </TheTooltip>
             <!-- Reaction trigger (popup is teleported to body) -->
             <div
               v-if="canReact(comment)"
               class="reaction-anchor"
               :ref="el => { if (reactionMenuOpen === comment.id) reactionMenuRef = el as HTMLElement }"
             >
+              <TheTooltip :content="$t('messages.addReaction')">
               <button
                 type="button"
                 class="reaction-trigger"
                 :class="{ active: reactionMenuOpen === comment.id }"
-                :title="$t('comments.addReaction')"
                 @click="reactionMenuOpen = reactionMenuOpen === comment.id ? null : comment.id"
               >
                 <LucideSmile :size="16" />
               </button>
+            </TheTooltip>
             </div>
           </div>
 
@@ -415,7 +420,7 @@ onMounted(async () => {
                 :native="true"
                 :theme="emojiPickerTheme"
                 :hide-search="false"
-                :static-texts="{ placeholder: $t('comments.emojiSearch') }"
+                :static-texts="{ placeholder: $t('messages.emojiSearch') }"
                 @select="onSelectEmoji"
               />
               <template #fallback><div class="emoji-picker-placeholder" /></template>
@@ -429,30 +434,33 @@ onMounted(async () => {
               v-model="newComment"
               type="text"
               class="input-base"
-              :placeholder="$t('comments.messagePlaceholder')"
+              :placeholder="$t('messages.messagePlaceholder')"
               :disabled="isSending"
               enterkeyhint="send"
               autocomplete="off"
             />
           </div>
           <div class="action-buttons">
-            <button
-              type="button"
-              class="footer-btn emoji-btn"
-              :class="{ active: showEmojiPicker }"
-              @click="showEmojiPicker = !showEmojiPicker"
-              :title="$t('comments.emojiInsert')"
-            >
-              <LucideSmile :size="20" />
-            </button>
-            <button
-              type="submit"
-              class="footer-btn send-btn"
-              :disabled="!newComment.trim() || isSending"
-            >
-              <LucideSend :size="20" v-if="!isSending" />
-              <LucideLoader :size="20" class="spin" v-else />
-            </button>
+            <TheTooltip :content="$t('messages.emojiInsert')">
+              <button
+                type="button"
+                class="footer-btn emoji-btn"
+                :class="{ active: showEmojiPicker }"
+                @click="showEmojiPicker = !showEmojiPicker"
+              >
+                <LucideSmile :size="20" />
+              </button>
+            </TheTooltip>
+            <TheTooltip :content="$t('messages.send')">
+              <button
+                type="submit"
+                class="footer-btn send-btn"
+                :disabled="!newComment.trim() || isSending"
+              >
+                <LucideSend :size="20" v-if="!isSending" />
+                <LucideLoader :size="20" class="spin" v-else />
+              </button>
+            </TheTooltip>
           </div>
         </form>
       </div>
@@ -477,15 +485,16 @@ onMounted(async () => {
           >
             {{ emoji }}
           </button>
-          <button
-            type="button"
-            class="reaction-more-btn"
-            :class="{ active: emojiPickerTarget === reactionMenuOpen }"
-            :title="$t('comments.reactWithEmoji')"
-            @click="emojiPickerTarget = emojiPickerTarget === reactionMenuOpen ? null : reactionMenuOpen"
-          >
-            <LucidePlus :size="14" />
-          </button>
+          <TheTooltip :content="$t('messages.reactWithEmoji')">
+            <button
+              type="button"
+              class="reaction-more-btn"
+              :class="{ active: emojiPickerTarget === reactionMenuOpen }"
+              @click="emojiPickerTarget = emojiPickerTarget === reactionMenuOpen ? null : reactionMenuOpen"
+            >
+              <LucidePlus :size="14" />
+            </button>
+          </TheTooltip>
           <Transition name="picker">
             <div v-if="emojiPickerTarget === reactionMenuOpen" class="reaction-picker-dropdown">
               <ClientOnly>
@@ -493,7 +502,7 @@ onMounted(async () => {
                   :native="true"
                   :theme="emojiPickerTheme"
                   :hide-search="false"
-                  :static-texts="{ placeholder: $t('comments.emojiSearch') }"
+                  :static-texts="{ placeholder: $t('messages.emojiSearch') }"
                   @select="onSelectReactionEmoji"
                 />
                 <template #fallback><div class="emoji-picker-placeholder" /></template>

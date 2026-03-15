@@ -220,15 +220,19 @@ const onMouseUp = () => onSwipeEnd();
       }"
     >
       <div class="item-row">
-        <button v-if="!item.isCompleted" class="drag-handle" :title="$t('items.move')">
-          <LucideGripVertical :size="20" />
-        </button>
+        <TheTooltip v-if="!item.isCompleted" :content="$t('items.move')">
+          <button class="drag-handle">
+            <LucideGripVertical :size="20" />
+          </button>
+        </TheTooltip>
 
-        <button class="checkbox-btn" :class="{ checked: item.isCompleted }" @click="emit('toggle', item)">
-          <div class="checkbox">
-            <LucideCheck v-if="item.isCompleted" :size="16" />
-          </div>
-        </button>
+        <TheTooltip :content="item.isCompleted ? $t('items.reopen') : $t('items.complete')">
+          <button class="checkbox-btn" :class="{ checked: item.isCompleted }" @click="emit('toggle', item)">
+            <div class="checkbox">
+              <LucideCheck v-if="item.isCompleted" :size="16" />
+            </div>
+          </button>
+        </TheTooltip>
 
         <div class="item-text-wrapper" v-if="isEditing">
           <input
@@ -249,29 +253,35 @@ const onMouseUp = () => onSwipeEnd();
         </span>
 
         <div class="action-btns" v-if="!isEditing">
-          <button class="edit-btn" @click.stop="startEditing" :title="$t('items.edit')">
-            <LucideEdit :size="16" />
-          </button>
-          <button class="delete-btn" @click.stop="emit('delete', item)">
-            <LucideTrash2 :size="16" />
-          </button>
+          <TheTooltip :content="$t('items.edit')">
+            <button class="edit-btn" @click.stop="startEditing">
+              <LucideEdit :size="16" />
+            </button>
+          </TheTooltip>
+          <TheTooltip :content="$t('common.delete')">
+            <button class="delete-btn" @click.stop="emit('delete', item)">
+              <LucideTrash2 :size="16" />
+            </button>
+          </TheTooltip>
           <UserBadge :name="item.creatorName" :online="isOnline" />
         </div>
       </div>
 
       <!-- Secondary Row: Meta & Tags -->
       <div class="item-details-row" v-if="!item.isCompleted">
-        <div class="tag-list" v-if="!editingTags" @click.stop="startEditingTags">
-          <LucideTag :size="14" class="tag-list-icon" />
-          <div v-for="tag in item.tags" :key="tag.id" class="tag-badge">
-            {{ tag.name }}
+        <TheTooltip v-if="!editingTags" :content="$t('items.tag')">
+          <div class="tag-list" @click.stop="startEditingTags">
+            <LucideTag :size="14" class="tag-list-icon" />
+            <div v-for="tag in item.tags" :key="tag.id" class="tag-badge">
+              {{ tag.name }}
+            </div>
+            <div class="tag-add-hint" v-if="!item.tags || item.tags.length === 0">
+              <!-- Icon only, no text needed as per user request -->
+            </div>
           </div>
-          <div class="tag-add-hint" v-if="!item.tags || item.tags.length === 0">
-            <!-- Icon only, no text needed as per user request -->
-          </div>
-        </div>
+        </TheTooltip>
 
-        <div class="tag-list editing" v-else ref="tagEditContainer" @click.stop>
+        <div v-else class="tag-list editing" ref="tagEditContainer" @click.stop>
           <LucideTag :size="14" class="tag-list-icon active" />
           <span
             class="tag-badge removable"
@@ -298,15 +308,16 @@ const onMouseUp = () => onSwipeEnd();
             :reactions="item.reactions ?? []"
             @reaction="emit('reaction')"
           />
-          <button
-            class="meta-comment-btn"
-            @click.stop="emit('click-comments', item.id)"
-            :class="{ 'has-comments': item.commentCount > 0, 'empty-comments': !item.commentCount }"
-            :title="item.commentCount > 0 ? $t('items.commentsCount', { count: item.commentCount }) : $t('items.startChat')"
-          >
-            <LucideMessageCircle :size="14" />
-            <span v-if="item.commentCount > 0">{{ item.commentCount }}</span>
-          </button>
+          <TheTooltip :content="item.commentCount > 0 ? $t('items.messagesCount', { count: item.commentCount }) : $t('items.startChat')">
+            <button
+              class="meta-comment-btn"
+              @click.stop="emit('click-comments', item.id)"
+              :class="{ 'has-comments': item.commentCount > 0, 'empty-comments': !item.commentCount }"
+            >
+              <LucideMessageCircle :size="14" />
+              <span v-if="item.commentCount > 0">{{ item.commentCount }}</span>
+            </button>
+          </TheTooltip>
         </div>
       </div>
     </div>

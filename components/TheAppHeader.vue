@@ -72,16 +72,17 @@ const handleInstallClick = () => {
     <header class="list-header glass-panel" id="app-header">
     <div class="header-left">
       <div class="menu-container" ref="navMenuRef">
-        <button
-          class="burger-btn"
-          @click.stop="toggleNav"
-          :class="{ active: isNavOpen }"
-          :title="$t('header.menu')"
-        >
-          <div class="burger-bar"></div>
-          <div class="burger-bar"></div>
-          <div class="burger-bar"></div>
-        </button>
+        <TheTooltip :content="$t('header.menu')">
+          <button
+            class="burger-btn"
+            @click.stop="toggleNav"
+            :class="{ active: isNavOpen }"
+          >
+            <div class="burger-bar"></div>
+            <div class="burger-bar"></div>
+            <div class="burger-bar"></div>
+          </button>
+        </TheTooltip>
 
         <TheDropdownMenu :show="isNavOpen" align="left">
           <template #header>
@@ -116,22 +117,24 @@ const handleInstallClick = () => {
     </div>
 
     <div class="header-right">
-      <button 
-        v-if="allTagsCount && allTagsCount > 0"
-        class="filter-toggle-btn" 
-        :class="{ active: showFilterBar }"
-        @click.stop="emit('toggle-filter')"
-        :title="$t('header.toggleFilter')"
-      >
-        <LucideFilter :size="18" />
-      </button>
+      <TheTooltip v-if="allTagsCount && allTagsCount > 0" :content="$t('header.toggleFilter')">
+        <button
+          class="filter-toggle-btn"
+          :class="{ active: showFilterBar }"
+          @click.stop="emit('toggle-filter')"
+        >
+          <LucideFilter :size="18" />
+        </button>
+      </TheTooltip>
 
       <div class="user-menu-container" ref="userMenuRef">
-        <button class="avatar-btn" @click.stop="toggleUserMenu">
+        <TheTooltip :content="$t('header.userMenu')">
+          <button class="avatar-btn" @click.stop="toggleUserMenu">
           <div class="avatar" v-if="user">
             {{ user.name?.substring(0, 2).toUpperCase() }}
           </div>
         </button>
+        </TheTooltip>
 
         <TheDropdownMenu :show="isUserMenuOpen" align="right">
           <template #header>
