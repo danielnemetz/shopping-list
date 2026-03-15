@@ -11,6 +11,7 @@ import {
   Tags as LucideTags,
   Download as LucideDownload,
   Filter as LucideFilter,
+  WifiOff as LucideWifiOff,
 } from "lucide-vue-next";
 import { useClickOutside } from "~/composables/useClickOutside";
 import { usePwa } from "~/composables/usePwa";
@@ -58,7 +59,13 @@ const logout = async () => {
 </script>
 
 <template>
-  <header class="list-header glass-panel">
+  <div class="header-container">
+    <div class="offline-global-banner" v-if="!syncState.isConnected">
+      <LucideWifiOff :size="14" />
+      <span>Sie sind offline. Die App funktioniert weiterhin (Offline-Cache).</span>
+    </div>
+
+    <header class="list-header glass-panel" id="app-header">
     <div class="header-left">
       <div class="menu-container" ref="navMenuRef">
         <button
@@ -101,15 +108,6 @@ const logout = async () => {
       <div class="header-title">
         <LucideShoppingCart :size="24" class="logo-icon" />
         <h2>Listly</h2>
-      </div>
-
-      <div
-        class="sync-status"
-        :class="{ connected: syncState.isConnected }"
-        :title="syncState.isConnected ? 'Online' : 'Offline'"
-      >
-        <div class="status-dot"></div>
-        <span>{{ syncState.isConnected ? "Synced" : "Offline" }}</span>
       </div>
     </div>
 
@@ -154,9 +152,30 @@ const logout = async () => {
       </div>
     </div>
   </header>
+  </div>
 </template>
 
 <style scoped>
+.header-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.offline-global-banner {
+  background-color: var(--danger-color);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  z-index: 501;
+}
+
 .list-header {
   flex-shrink: 0;
   display: flex;
@@ -203,47 +222,6 @@ const logout = async () => {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-.sync-status {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.6rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 4px 10px;
-  border-radius: 99px;
-  background: var(--bg-surface-elevated);
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
-  transition: all var(--transition-normal);
-}
-
-.sync-status.connected {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.2);
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.sync-status.connected .status-dot {
-  box-shadow: 0 0 8px currentColor;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
 }
 
 .header-right {
