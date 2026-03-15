@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import {
   Activity as LucideActivity,
@@ -23,7 +23,13 @@ const props = defineProps<{
 
 const emit = defineEmits(["toggle-filter"]);
 
+const { t } = useI18n();
 const { themeMode, toggleTheme } = useTheme();
+const themeLabel = computed(() => {
+  if (themeMode.value === 'light') return t('header.themeLight');
+  if (themeMode.value === 'dark') return t('header.themeDark');
+  return t('header.themeAuto');
+});
 const { isInstallable, install: installApp } = usePwa();
 const router = useRouter();
 
@@ -65,7 +71,7 @@ const logout = async () => {
           class="burger-btn"
           @click.stop="toggleNav"
           :class="{ active: isNavOpen }"
-          title="Menu"
+          :title="$t('header.menu')"
         >
           <div class="burger-bar"></div>
           <div class="burger-bar"></div>
@@ -74,17 +80,17 @@ const logout = async () => {
 
         <TheDropdownMenu :show="isNavOpen" align="left">
           <template #header>
-            <span class="menu-title">Menü</span>
+            <span class="menu-title">{{ $t('header.menu') }}</span>
           </template>
 
           <TheDropdownItem to="/activity" @click="isNavOpen = false">
             <template #icon><LucideActivity :size="18" /></template>
-            Aktivitäten
+            {{ $t('header.activities') }}
           </TheDropdownItem>
           
           <TheDropdownItem to="/tags" @click="isNavOpen = false">
             <template #icon><LucideTags :size="18" /></template>
-            Tags verwalten
+            {{ $t('header.manageTags') }}
           </TheDropdownItem>
 
           <TheDropdownItem 
@@ -93,7 +99,7 @@ const logout = async () => {
             @click="installApp(); isNavOpen = false"
           >
             <template #icon><LucideDownload :size="18" /></template>
-            App installieren
+            {{ $t('header.installApp') }}
           </TheDropdownItem>
         </TheDropdownMenu>
       </div>
@@ -110,7 +116,7 @@ const logout = async () => {
         class="filter-toggle-btn" 
         :class="{ active: showFilterBar }"
         @click.stop="emit('toggle-filter')"
-        title="Tags ein-/ausblenden"
+        :title="$t('header.toggleFilter')"
       >
         <LucideFilter :size="18" />
       </button>
@@ -134,12 +140,16 @@ const logout = async () => {
               <LucideMoon v-else-if="themeMode === 'dark'" :size="18" />
               <LucideMonitor v-else :size="18" />
             </template>
-            Darstellung: <strong>{{ themeMode }}</strong>
+            {{ $t('header.theme') }}: <strong>{{ themeLabel }}</strong>
           </TheDropdownItem>
+
+          <div class="user-menu-language">
+            <LanguageSelector />
+          </div>
 
           <TheDropdownItem variant="danger" @click.stop="logout">
             <template #icon><LucideLogOut :size="18" /></template>
-            Abmelden
+            {{ $t('header.logout') }}
           </TheDropdownItem>
         </TheDropdownMenu>
       </div>
@@ -325,5 +335,9 @@ const logout = async () => {
 .user-email {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.user-menu-language {
+  padding: 0.25rem 0;
 }
 </style>

@@ -23,6 +23,7 @@ const successMessage = ref("");
 const isEditingId = ref<number | null>(null);
 const editName = ref("");
 
+const { t } = useI18n();
 const { connect, on } = useSync();
 
 const fetchTags = async () => {
@@ -31,7 +32,7 @@ const fetchTags = async () => {
     const data = await $fetch<any>("/api/tags");
     tags.value = data.tags;
   } catch (err: any) {
-    errorMessage.value = "Fehler beim Laden der Tags.";
+    errorMessage.value = t('tags.loadError');
   } finally {
     isLoading.value = false;
   }
@@ -65,31 +66,27 @@ const saveEdit = async (tag: any) => {
       body: { name: editName.value.trim() },
     });
     tag.name = editName.value.trim();
-    successMessage.value = "Tag aktualisiert.";
+    successMessage.value = t('tags.updated');
     setTimeout(() => (successMessage.value = ""), 3000);
     cancelEdit();
   } catch (err: any) {
-    errorMessage.value = err.data?.statusMessage || "Fehler beim Speichern.";
+    errorMessage.value = err.data?.statusMessage || t('tags.saveError');
     setTimeout(() => (errorMessage.value = ""), 4000);
   }
 };
 
 const deleteTag = async (id: number) => {
-  if (
-    !confirm(
-      "Möchtest du diesen Tag wirklich löschen? Er wird von allen Einträgen entfernt.",
-    )
-  ) {
+  if (!confirm(t('tags.deleteConfirm'))) {
     return;
   }
 
   try {
     await $fetch(`/api/tags/${id}`, { method: "DELETE" });
     tags.value = tags.value.filter((t) => t.id !== id);
-    successMessage.value = "Tag gelöscht.";
+    successMessage.value = t('tags.deleted');
     setTimeout(() => (successMessage.value = ""), 3000);
   } catch (err: any) {
-    errorMessage.value = "Fehler beim Löschen des Tags.";
+    errorMessage.value = t('tags.deleteError');
     setTimeout(() => (errorMessage.value = ""), 4000);
   }
 };
@@ -100,10 +97,10 @@ const deleteTag = async (id: number) => {
     <header class="list-header glass-panel">
       <div class="container-centered header-content">
         <div class="header-left">
-          <NuxtLink to="/" class="btn-icon">
+          <NuxtLink to="/" class="btn-icon" :title="$t('common.back')">
             <LucideArrowLeft :size="24" />
           </NuxtLink>
-          <h2><LucideTag :size="20" class="mr-2 inline" />Tag-Verwaltung</h2>
+          <h2><LucideTag :size="20" class="mr-2 inline" />{{ $t('tags.title') }}</h2>
         </div>
       </div>
     </header>
@@ -112,13 +109,13 @@ const deleteTag = async (id: number) => {
       <div class="container-centered">
         <div v-if="isLoading" class="loading-state">
           <LucideLoader class="spin" :size="32" />
-          <p>Lade Tags...</p>
+          <p>{{ $t('tags.loading') }}</p>
         </div>
 
         <div v-else class="tag-list-card">
           <div v-if="tags.length === 0" class="empty-state glass-panel">
             <LucideTag :size="48" class="text-muted mb-4" />
-            <p>Noch keine Tags erstellt.</p>
+            <p>{{ $t('tags.empty') }}</p>
           </div>
 
           <ul v-else class="tag-list">
@@ -135,14 +132,14 @@ const deleteTag = async (id: number) => {
                   <button
                     @click="saveEdit(tag)"
                     class="btn-icon success"
-                    title="Speichern"
+                    :title="$t('tags.save')"
                   >
                     <LucideCheck :size="18" />
                   </button>
                   <button
                     @click="cancelEdit"
                     class="btn-icon danger"
-                    title="Abbrechen"
+                    :title="$t('tags.cancel')"
                   >
                     <LucideX :size="18" />
                   </button>
@@ -157,14 +154,14 @@ const deleteTag = async (id: number) => {
                   <button
                     @click="startEdit(tag)"
                     class="btn-icon"
-                    title="Bearbeiten"
+                    :title="$t('tags.edit')"
                   >
                     <LucidePencil :size="16" />
                   </button>
                   <button
                     @click="deleteTag(tag.id)"
                     class="btn-icon danger"
-                    title="Löschen"
+                    :title="$t('tags.delete')"
                   >
                     <LucideTrash2 :size="16" />
                   </button>

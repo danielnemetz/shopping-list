@@ -13,7 +13,7 @@ onMounted(() => {
     <VitePwaManifest />
     <div class="offline-global-banner" v-if="!syncState.isConnected">
       <LucideWifiOff :size="14" />
-      <span>Du bist offline. Die App funktioniert weiterhin.</span>
+      <span>{{ $t('common.offlineBanner') }}</span>
     </div>
     <NuxtPage />
   </div>

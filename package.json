@@ -13,6 +13,7 @@
     "db:migrate": "node scripts/migrate.js"
   },
   "dependencies": {
+    "@nuxtjs/i18n": "^10.2.3",
     "@vite-pwa/nuxt": "^1.1.1",
     "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.45.1",

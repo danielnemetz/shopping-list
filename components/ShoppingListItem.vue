@@ -196,15 +196,15 @@ const onMouseUp = () => onSwipeEnd();
       <div class="swipe-bg-content" v-if="swipeOffset > 0">
         <template v-if="!item.isCompleted">
           <LucideCheck :size="24" />
-          <span>Abschließen</span>
+          <span>{{ $t('items.complete') }}</span>
         </template>
         <template v-else>
           <LucideX :size="24" />
-          <span>Wieder öffnen</span>
+          <span>{{ $t('items.reopen') }}</span>
         </template>
       </div>
       <div class="swipe-bg-content tagging-content" v-else-if="swipeOffset < 0">
-        <span>Taggen</span>
+        <span>{{ $t('items.tag') }}</span>
         <LucideTag :size="24" />
       </div>
     </div>
@@ -219,7 +219,7 @@ const onMouseUp = () => onSwipeEnd();
       }"
     >
       <div class="item-row">
-        <button v-if="!item.isCompleted" class="drag-handle" title="Verschieben">
+        <button v-if="!item.isCompleted" class="drag-handle" :title="$t('items.move')">
           <LucideGripVertical :size="20" />
         </button>
 
@@ -248,7 +248,7 @@ const onMouseUp = () => onSwipeEnd();
         </span>
 
         <div class="action-btns" v-if="!isEditing">
-          <button class="edit-btn" @click.stop="startEditing" title="Bearbeiten">
+          <button class="edit-btn" @click.stop="startEditing" :title="$t('items.edit')">
             <LucideEdit :size="16" />
           </button>
           <button class="delete-btn" @click.stop="emit('delete', item)">
@@ -283,7 +283,7 @@ const onMouseUp = () => onSwipeEnd();
           <input
             v-model="editTagInput"
             class="tag-inline-input"
-            placeholder="Tag..."
+            :placeholder="$t('items.tagPlaceholder')"
             @keydown="handleTagKeydown"
             @blur="editTagInput.trim() ? addTag() : (editingTags = false)"
             autofocus
@@ -294,7 +294,7 @@ const onMouseUp = () => onSwipeEnd();
           class="meta-comment-btn"
           @click.stop="emit('click-comments', item.id)"
           :class="{ 'has-comments': item.commentCount > 0, 'empty-comments': !item.commentCount }"
-          :title="item.commentCount > 0 ? item.commentCount + ' Kommentare' : 'Chat starten'"
+          :title="item.commentCount > 0 ? $t('items.commentsCount', { count: item.commentCount }) : $t('items.startChat')"
         >
           <LucideMessageCircle :size="14" />
           <span v-if="item.commentCount > 0">{{ item.commentCount }}</span>

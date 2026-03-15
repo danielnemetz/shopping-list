@@ -13,6 +13,7 @@ definePageMeta({
 });
 
 const router = useRouter();
+const { t } = useI18n();
 const { connect, on, state: syncState, isOnline, queueAction } = useSync();
 
 const user = ref<any>(null);
@@ -180,7 +181,7 @@ const saveEdit = (item: any, newText: string) => {
 };
 
 const deleteItem = async (item: any) => {
-  if (!confirm(`Möchtest du "${item.text}" wirklich löschen?`)) return;
+  if (!confirm(t('index.deleteConfirm', { text: item.text }))) return;
   const wasCompleted = item.isCompleted;
   const prevItems = [...items.value];
   const prevCompleted = [...completedItemsList.value];
@@ -309,12 +310,12 @@ const getInitials = (name: string) => {
 
     <main class="list-content">
       <div class="section-title" v-if="openItems.length > 0">
-        Zu erledigen ({{ openItems.length }})
+        {{ $t('index.toDoSection', { count: openItems.length }) }}
       </div>
 
       <div class="empty-state" v-if="items.length === 0 && completedTotal === 0">
         <LucideCheckCircle :size="48" />
-        <p>Alles erledigt! Zeit, die Beine hochzulegen.</p>
+        <p>{{ $t('index.emptyState') }}</p>
       </div>
 
       <draggable
@@ -345,7 +346,7 @@ const getInitials = (name: string) => {
       </draggable>
 
       <div class="section-title mt-8" v-if="completedTotal > 0">
-        Erledigt ({{ completedTotal }})
+        {{ $t('index.completedSection', { count: completedTotal }) }}
       </div>
 
       <div class="items-list" v-if="completedTotal > 0">
@@ -369,7 +370,7 @@ const getInitials = (name: string) => {
           @click="loadMoreCompleted"
         >
           <LucideChevronDown :size="16" />
-          Mehr laden ({{ completedTotal - completedItemsList.length }} weitere)
+          {{ $t('index.loadMore', { remaining: completedTotal - completedItemsList.length }) }}
         </button>
       </div>
     </main>    <AddItemFooter 

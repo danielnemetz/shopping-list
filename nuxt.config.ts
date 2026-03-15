@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   srcDir: '.',
   devtools: { enabled: true },
-  modules: ['lucide-nuxt', '@vite-pwa/nuxt'],
+  modules: ['@nuxtjs/i18n', 'lucide-nuxt', '@vite-pwa/nuxt'],
   css: ['~/assets/css/main.css'],
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },
@@ -76,6 +76,21 @@ export default defineNuxtConfig({
     },
     devOptions: {
       enabled: false,
+    },
+  },
+  i18n: {
+    strategy: 'no_prefix',
+    defaultLocale: 'de',
+    locales: [
+      { code: 'de', file: 'de.json' },
+      { code: 'en', file: 'en.json' },
+      { code: 'pl', file: 'pl.json' },
+    ],
+    langDir: 'locales',
+    lazy: false,
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'i18n_locale',
     },
   },
   routeRules: {

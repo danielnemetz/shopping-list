@@ -1,0 +1,132 @@
+{
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "unknown": "Unknown",
+    "offlineBanner": "You are offline. The app continues to work."
+  },
+  "index": {
+    "deleteConfirm": "Do you really want to delete \"{text}\"?",
+    "toDoSection": "To do ({count})",
+    "emptyState": "All done! Time to put your feet up.",
+    "completedSection": "Completed ({count})",
+    "loadMore": "Load more ({remaining} more)"
+  },
+  "login": {
+    "tagline": "Shop together.",
+    "emailPlaceholder": "Your email address",
+    "sendLink": "Sending link...",
+    "requestLink": "Request login link",
+    "errorGeneric": "An error occurred.",
+    "wrongCode": "Wrong or expired code.",
+    "emailSent": "Email sent!",
+    "emailSentInfoIntro": "We sent a login link to",
+    "emailSentInfoOutro": ". Please click the link in the email to sign in.",
+    "or": "OR",
+    "codeLabel": "Enter code manually:",
+    "checking": "Checking...",
+    "login": "Sign in",
+    "changeEmail": "Change email address"
+  },
+  "auth": {
+    "invalidLink": "Invalid or incomplete sign-in link.",
+    "loginFailed": "Sign-in failed. The link may have expired.",
+    "signingIn": "Signing in...",
+    "verifying": "Verifying your details.",
+    "oops": "Oops!",
+    "backToLogin": "Back to login"
+  },
+  "comments": {
+    "title": "Comments",
+    "back": "Back",
+    "noComments": "No comments yet.",
+    "startConversation": "Start the conversation!",
+    "unknown": "Unknown",
+    "me": "Me",
+    "justNow": "just now",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago",
+    "syncing": "Syncing...",
+    "typing_one": "{name} is typing...",
+    "typing_other": "{names} are typing...",
+    "emojiSearch": "Search emoji...",
+    "messagePlaceholder": "Write a message...",
+    "emojiInsert": "Insert emoji"
+  },
+  "activity": {
+    "added": "added",
+    "completed": "completed",
+    "uncompleted": "reopened",
+    "deleted": "deleted",
+    "renamed": "renamed",
+    "tagCreated": "created the tag",
+    "tagRenamed": "renamed the tag to",
+    "tagDeleted": "deleted the tag",
+    "tagsChanged": "changed tags for",
+    "edited": "edited",
+    "unknownDate": "Unknown date",
+    "todayAt": "Today at {time}",
+    "dateAt": "{date} at {time}",
+    "back": "Back",
+    "title": "Activity",
+    "loading": "Loading history...",
+    "empty": "No activity yet.",
+    "emptyHint": "Add items to the list to see activity here.",
+    "unknown": "Unknown",
+    "loadOlder": "Load older..."
+  },
+  "tags": {
+    "title": "Tag management",
+    "loadError": "Error loading tags.",
+    "updated": "Tag updated.",
+    "saveError": "Error saving.",
+    "deleteConfirm": "Do you really want to delete this tag? It will be removed from all items.",
+    "deleted": "Tag deleted.",
+    "deleteError": "Error deleting tag.",
+    "loading": "Loading tags...",
+    "empty": "No tags created yet.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "header": {
+    "menu": "Menu",
+    "activities": "Activity",
+    "manageTags": "Manage tags",
+    "installApp": "Install app",
+    "toggleFilter": "Show/hide tags",
+    "theme": "Appearance",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "System",
+    "logout": "Sign out",
+    "language": "Language",
+    "langDe": "Deutsch",
+    "langEn": "English"
+  },
+  "items": {
+    "complete": "Complete",
+    "reopen": "Reopen",
+    "tag": "Tag",
+    "move": "Move",
+    "edit": "Edit",
+    "tagPlaceholder": "Tag...",
+    "commentsCount": "{count} comments",
+    "startChat": "Start chat"
+  },
+  "tagPopover": {
+    "title": "Tags for \"{text}\"",
+    "addTagPlaceholder": "Add new tag...",
+    "done": "Done"
+  },
+  "addItem": {
+    "tagPlaceholder": "Enter tag...",
+    "addPlaceholder": "Add new item...",
+    "addTags": "Add tags"
+  }
+}

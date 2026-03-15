@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import {
   LucideChevronLeft,
@@ -14,7 +14,14 @@ definePageMeta({
 });
 
 const router = useRouter();
+const { t, locale } = useI18n();
 const goBack = () => router.push("/");
+
+const localeTag = computed(() => {
+  if (locale.value === 'de') return 'de-DE';
+  if (locale.value === 'pl') return 'pl-PL';
+  return 'en-US';
+});
 
 interface Activity {
   id: number;
@@ -92,42 +99,43 @@ const getActionIcon = (action: string) => {
 const getActionText = (action: string) => {
   switch (action) {
     case "added":
-      return "hat hinzugefügt";
+      return t('activity.added');
     case "completed":
-      return "hat abgehakt";
+      return t('activity.completed');
     case "uncompleted":
-      return "hat reaktiviert";
+      return t('activity.uncompleted');
     case "deleted":
-      return "hat gelöscht";
+      return t('activity.deleted');
     case "renamed":
-      return "hat umbenannt";
+      return t('activity.renamed');
     case "tag_created":
-      return "hat den Tag erstellt";
+      return t('activity.tagCreated');
     case "tag_updated":
-      return "hat den Tag umbenannt in";
+      return t('activity.tagRenamed');
     case "tag_deleted":
-      return "hat den Tag gelöscht";
+      return t('activity.tagDeleted');
     case "tags_changed":
-      return "hat Tags geändert für";
+      return t('activity.tagsChanged');
     default:
-      return "hat bearbeitet";
+      return t('activity.edited');
   }
-};
+  };
 
-const formatDate = (dateValue: string | Date) => {
+  const formatDate = (dateValue: string | Date) => {
   const d = new Date(dateValue);
-  if (isNaN(d.getTime())) return "Unbekanntes Datum";
-  
+  if (isNaN(d.getTime())) return t('activity.unknownDate');
+
   const now = new Date();
   const isToday =
     d.getDate() === now.getDate() &&
     d.getMonth() === now.getMonth() &&
     d.getFullYear() === now.getFullYear();
 
-  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (isToday) return `Heute um ${time}`;
+  const time = d.toLocaleTimeString(localeTag.value, { hour: "2-digit", minute: "2-digit" });
+  if (isToday) return t('activity.todayAt', { time });
 
-  return `${d.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })} um ${time}`;
+  const date = d.toLocaleDateString(localeTag.value, { day: "2-digit", month: "2-digit", year: "numeric" });
+  return t('activity.dateAt', { date, time });
 };
 </script>
 
@@ -135,10 +143,10 @@ const formatDate = (dateValue: string | Date) => {
   <div class="list-wrapper animate-fade-in">
     <header class="list-header glass-panel">
       <div class="header-left">
-        <button class="btn-icon" @click="goBack" title="Zurück">
+        <button class="btn-icon" @click="goBack" :title="$t('activity.back')">
           <LucideChevronLeft :size="24" />
         </button>
-        <h2><LucideActivity :size="20" class="mr-2 inline" />Aktivitäten</h2>
+        <h2><LucideActivity :size="20" class="mr-2 inline" />{{ $t('activity.title') }}</h2>
       </div>
     </header>
 
@@ -148,7 +156,7 @@ const formatDate = (dateValue: string | Date) => {
         class="flex flex-col items-center justify-center p-8 opacity-70"
       >
         <LucideLoader :size="32" class="spin mb-4" />
-        <p>Lade Verlauf...</p>
+        <p>{{ $t('activity.loading') }}</p>
       </div>
 
       <div
@@ -156,9 +164,9 @@ const formatDate = (dateValue: string | Date) => {
         class="flex flex-col items-center justify-center p-8 text-center opacity-70"
       >
         <LucideAlertCircle :size="48" class="mb-4" />
-        <p>Noch keine Aktivitäten vorhanden.</p>
+        <p>{{ $t('activity.empty') }}</p>
         <p class="text-sm mt-2">
-          Füge Einträge zur Liste hinzu, um hier etwas zu sehen.
+          {{ $t('activity.emptyHint') }}
         </p>
       </div>
 
@@ -173,7 +181,7 @@ const formatDate = (dateValue: string | Date) => {
               <span class="avatar-small">{{
                 activity.user?.name.substring(0, 2).toUpperCase() || "?"
               }}</span>
-              {{ activity.user?.name || "Unbekannt" }}
+              {{ activity.user?.name || $t('activity.unknown') }}
             </span>
             <span class="activity-time text-xs opacity-60">{{
               formatDate(activity.createdAt)
@@ -198,7 +206,7 @@ const formatDate = (dateValue: string | Date) => {
           @click="fetchActivities(true)"
           class="btn-primary w-full mt-4 !bg-surface-2 !text-text-1"
         >
-          Ältere laden...
+          {{ $t('activity.loadOlder') }}
         </button>
       </div>
     </main>

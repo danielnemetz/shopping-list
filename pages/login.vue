@@ -3,6 +3,7 @@ import { ref, watch, onMounted } from "vue";
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 const step = ref<1 | 2>(1);
 const email = ref("");
 const code = ref("");
@@ -33,7 +34,7 @@ const requestLoginToken = async () => {
     requestSuccess.value = true;
     step.value = 2;
   } catch (err: any) {
-    errorMessage.value = err?.data?.message || "Ein Fehler ist aufgetreten.";
+    errorMessage.value = err?.data?.message || t('login.errorGeneric');
   } finally {
     isLoading.value = false;
   }
@@ -52,7 +53,7 @@ const verifyCode = async () => {
     router.push("/");
   } catch (err: any) {
     errorMessage.value =
-      err?.data?.message || "Falscher oder abgelaufener Code.";
+      err?.data?.message || t('login.wrongCode');
   } finally {
     isLoading.value = false;
   }
@@ -65,7 +66,7 @@ const verifyCode = async () => {
       <div class="header">
         <LucideShoppingCart :size="48" class="logo-icon" />
         <h1>Listly</h1>
-        <p>Gemeinsam einkaufen.</p>
+        <p>{{ $t('login.tagline') }}</p>
       </div>
 
       <div class="form-container">
@@ -80,7 +81,7 @@ const verifyCode = async () => {
             <input
               v-model="email"
               type="email"
-              placeholder="Deine E-Mail Adresse"
+              :placeholder="$t('login.emailPlaceholder')"
               class="input-base with-icon"
               required
             />
@@ -93,7 +94,7 @@ const verifyCode = async () => {
             <LucideSend :size="18" v-if="!isLoading" />
             <LucideLoader :size="18" class="spin" v-else />
             <span>{{
-              isLoading ? "Sende Link..." : "Login-Link anfordern"
+              isLoading ? $t('login.sendLink') : $t('login.requestLink')
             }}</span>
           </button>
 
@@ -108,22 +109,19 @@ const verifyCode = async () => {
             <div class="success-icon-wrapper mb-4">
               <LucideMail :size="32" class="text-accent" />
             </div>
-            <h3 class="text-lg font-bold mb-2">E-Mail wurde gesendet!</h3>
+            <h3 class="text-lg font-bold mb-2">{{ $t('login.emailSent') }}</h3>
             <p class="text-sm code-info">
-              Wir haben einen Login-Link an <br /><strong>{{ email }}</strong>
-              gesendet.<br /><br />
-              Bitte klicke auf den Link in der E-Mail, um dich direkt
-              einzuloggen.
+              {{ $t('login.emailSentInfoIntro') }} <strong>{{ email }}</strong> {{ $t('login.emailSentInfoOutro') }}
             </p>
           </div>
 
           <div class="divider mb-6">
-            <span>ODER</span>
+            <span>{{ $t('login.or') }}</span>
           </div>
 
           <form @submit.prevent="verifyCode" class="flex flex-col">
             <p class="text-center mb-4 text-xs opacity-70">
-              Code manuell eingeben:
+              {{ $t('login.codeLabel') }}
             </p>
             <div class="input-group">
               <LucideKeyRound class="input-icon" :size="20" />
@@ -143,7 +141,7 @@ const verifyCode = async () => {
             >
               <LucideCheckCircle :size="18" v-if="!isLoading" />
               <LucideLoader :size="18" class="spin" v-else />
-              <span>{{ isLoading ? "Prüfe..." : "Einloggen" }}</span>
+              <span>{{ isLoading ? $t('login.checking') : $t('login.login') }}</span>
             </button>
           </form>
 
@@ -154,7 +152,7 @@ const verifyCode = async () => {
             :disabled="isLoading"
           >
             <LucideArrowLeft :size="16" />
-            E-Mail Adresse ändern
+            {{ $t('login.changeEmail') }}
           </button>
 
           <p

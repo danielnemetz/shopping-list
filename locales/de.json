@@ -1,0 +1,132 @@
+{
+  "common": {
+    "back": "Zurück",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "unknown": "Unbekannt",
+    "offlineBanner": "Du bist offline. Die App funktioniert weiterhin."
+  },
+  "index": {
+    "deleteConfirm": "Möchtest du \"{text}\" wirklich löschen?",
+    "toDoSection": "Zu erledigen ({count})",
+    "emptyState": "Alles erledigt! Zeit, die Beine hochzulegen.",
+    "completedSection": "Erledigt ({count})",
+    "loadMore": "Mehr laden ({remaining} weitere)"
+  },
+  "login": {
+    "tagline": "Gemeinsam einkaufen.",
+    "emailPlaceholder": "Deine E-Mail Adresse",
+    "sendLink": "Sende Link...",
+    "requestLink": "Login-Link anfordern",
+    "errorGeneric": "Ein Fehler ist aufgetreten.",
+    "wrongCode": "Falscher oder abgelaufener Code.",
+    "emailSent": "E-Mail wurde gesendet!",
+    "emailSentInfoIntro": "Wir haben einen Login-Link an",
+    "emailSentInfoOutro": "gesendet. Bitte klicke auf den Link in der E-Mail, um dich direkt einzuloggen.",
+    "or": "ODER",
+    "codeLabel": "Code manuell eingeben:",
+    "checking": "Prüfe...",
+    "login": "Einloggen",
+    "changeEmail": "E-Mail Adresse ändern"
+  },
+  "auth": {
+    "invalidLink": "Ungültiger oder unvollständiger Anmeldelink.",
+    "loginFailed": "Anmeldung fehlgeschlagen. Der Link ist möglicherweise abgelaufen.",
+    "signingIn": "Anmeldung läuft...",
+    "verifying": "Wir verifizieren deine Daten.",
+    "oops": "Hoppla!",
+    "backToLogin": "Zurück zum Login"
+  },
+  "comments": {
+    "title": "Kommentare",
+    "back": "Zurück",
+    "noComments": "Noch keine Kommentare.",
+    "startConversation": "Starte die Konversation!",
+    "unknown": "Unbekannt",
+    "me": "Ich",
+    "justNow": "gerade eben",
+    "minutesAgo": "vor {minutes}m",
+    "hoursAgo": "vor {hours}h",
+    "daysAgo": "vor {days}d",
+    "syncing": "Wird synchronisiert...",
+    "typing_one": "{name} schreibt...",
+    "typing_other": "{names} schreiben...",
+    "emojiSearch": "Emoji suchen...",
+    "messagePlaceholder": "Nachricht schreiben...",
+    "emojiInsert": "Emoji einfügen"
+  },
+  "activity": {
+    "added": "hat hinzugefügt",
+    "completed": "hat abgehakt",
+    "uncompleted": "hat reaktiviert",
+    "deleted": "hat gelöscht",
+    "renamed": "hat umbenannt",
+    "tagCreated": "hat den Tag erstellt",
+    "tagRenamed": "hat den Tag umbenannt in",
+    "tagDeleted": "hat den Tag gelöscht",
+    "tagsChanged": "hat Tags geändert für",
+    "edited": "hat bearbeitet",
+    "unknownDate": "Unbekanntes Datum",
+    "todayAt": "Heute um {time}",
+    "dateAt": "{date} um {time}",
+    "back": "Zurück",
+    "title": "Aktivitäten",
+    "loading": "Lade Verlauf...",
+    "empty": "Noch keine Aktivitäten vorhanden.",
+    "emptyHint": "Füge Einträge zur Liste hinzu, um hier etwas zu sehen.",
+    "unknown": "Unbekannt",
+    "loadOlder": "Ältere laden..."
+  },
+  "tags": {
+    "title": "Tag-Verwaltung",
+    "loadError": "Fehler beim Laden der Tags.",
+    "updated": "Tag aktualisiert.",
+    "saveError": "Fehler beim Speichern.",
+    "deleteConfirm": "Möchtest du diesen Tag wirklich löschen? Er wird von allen Einträgen entfernt.",
+    "deleted": "Tag gelöscht.",
+    "deleteError": "Fehler beim Löschen des Tags.",
+    "loading": "Lade Tags...",
+    "empty": "Noch keine Tags erstellt.",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen"
+  },
+  "header": {
+    "menu": "Menü",
+    "activities": "Aktivitäten",
+    "manageTags": "Tags verwalten",
+    "installApp": "App installieren",
+    "toggleFilter": "Tags ein-/ausblenden",
+    "theme": "Darstellung",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeAuto": "System",
+    "logout": "Abmelden",
+    "language": "Sprache",
+    "langDe": "Deutsch",
+    "langEn": "English"
+  },
+  "items": {
+    "complete": "Abschließen",
+    "reopen": "Wieder öffnen",
+    "tag": "Taggen",
+    "move": "Verschieben",
+    "edit": "Bearbeiten",
+    "tagPlaceholder": "Tag...",
+    "commentsCount": "{count} Kommentare",
+    "startChat": "Chat starten"
+  },
+  "tagPopover": {
+    "title": "Tags für \"{text}\"",
+    "addTagPlaceholder": "Neuen Tag hinzufügen...",
+    "done": "Fertig"
+  },
+  "addItem": {
+    "tagPlaceholder": "Tag eingeben...",
+    "addPlaceholder": "Neuen Eintrag hinzufügen...",
+    "addTags": "Tags hinzufügen"
+  }
+}

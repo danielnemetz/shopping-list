@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import EmojiPicker from "vue3-emoji-picker";
 import "vue3-emoji-picker/css";
@@ -22,6 +22,7 @@ definePageMeta({
 
 const router = useRouter();
 const route = useRoute();
+const { t, locale } = useI18n();
 const { connect, on, isOnline, setTyping, queueAction, state: syncState } = useSync();
 const itemId = route.params.id as string;
 
@@ -99,7 +100,7 @@ const sendComment = async () => {
     createdAt: new Date().toISOString(),
     user: {
       id: currentUser.value?.id,
-      name: currentUser.value?.name || "Ich"
+      name: currentUser.value?.name || t('comments.me')
     }
   };
 
@@ -128,6 +129,11 @@ watch(newComment, (val) => {
   }
 });
 
+const localeTag = computed(() => {
+  if (locale.value === 'de') return 'de-DE';
+  if (locale.value === 'pl') return 'pl-PL';
+  return 'en-US';
+});
 const formatTime = (dateStr: string) => {
   const date = new Date(dateStr);
   const now = new Date();
@@ -136,12 +142,20 @@ const formatTime = (dateStr: string) => {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return "gerade eben";
-  if (minutes < 60) return `vor ${minutes}m`;
-  if (hours < 24) return `vor ${hours}h`;
-  if (days < 7) return `vor ${days}d`;
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  if (minutes < 1) return t('comments.justNow');
+  if (minutes < 60) return t('comments.minutesAgo', { minutes });
+  if (hours < 24) return t('comments.hoursAgo', { hours });
+  if (days < 7) return t('comments.daysAgo', { days });
+  return date.toLocaleDateString(localeTag.value, { day: "2-digit", month: "2-digit" });
 };
+
+const typingText = computed(() => {
+  if (typingUsers.value.length === 0) return '';
+  const names = typingUsers.value.map(u => u.name).join(', ');
+  return typingUsers.value.length === 1
+    ? t('comments.typing_one', { name: names })
+    : t('comments.typing_other', { names });
+});
 
 const isOwnMessage = (comment: any) => comment.user?.id === currentUser.value?.id;
 
@@ -181,12 +195,12 @@ onMounted(async () => {
     <header class="list-header glass-panel">
       <div class="container-centered header-content">
         <div class="header-left">
-          <NuxtLink to="/" class="btn-icon" title="Zurück">
+          <NuxtLink to="/" class="btn-icon" :title="$t('comments.back')">
             <LucideChevronLeft :size="24" />
           </NuxtLink>
           <h2>
             <LucideMessageCircle :size="20" class="mr-2 inline" />
-            <span class="header-title">{{ item ? item.text : 'Kommentare' }}</span>
+            <span class="header-title">{{ item ? item.text : $t('comments.title') }}</span>
           </h2>
         </div>
       </div>
@@ -203,8 +217,8 @@ onMounted(async () => {
 
       <div v-if="comments.length === 0" class="empty-state">
         <LucideMessageCircle :size="48" />
-        <p>Noch keine Kommentare.</p>
-        <p class="text-muted">Starte die Konversation!</p>
+        <p>{{ $t('comments.noComments') }}</p>
+        <p class="text-muted">{{ $t('comments.startConversation') }}</p>
       </div>
 
       <div 
@@ -228,14 +242,14 @@ onMounted(async () => {
             class="message-author" 
             v-if="!isOwnMessage(comment) && (index === 0 || comments[index - 1]?.user?.id !== comment.user?.id)"
           >
-            {{ comment.user?.name || 'Unbekannt' }}
+            {{ comment.user?.name || $t('comments.unknown') }}
           </div>
 
           <div class="message-bubble-row">
             <div class="message-bubble" :class="{ 'is-pending': isPending(comment.id) }">
               {{ comment.text }}
             </div>
-            <div v-if="isPending(comment.id)" class="pending-icon" title="Wird synchronisiert...">
+            <div v-if="isPending(comment.id)" class="pending-icon" :title="$t('comments.syncing')">
               <LucideCloudUpload :size="12" />
             </div>
           </div>
@@ -250,10 +264,7 @@ onMounted(async () => {
           <div class="typing-dots">
             <span></span><span></span><span></span>
           </div>
-          <span class="typing-text">
-            {{ typingUsers.map(u => u.name).join(', ') }} 
-            {{ typingUsers.length === 1 ? 'schreibt...' : 'schreiben...' }}
-          </span>
+          <span class="typing-text">{{ typingText }}</span>
         </div>
       </div>
     </div>
@@ -268,7 +279,7 @@ onMounted(async () => {
                 :native="true"
                 :theme="emojiPickerTheme"
                 :hide-search="false"
-                :static-texts="{ placeholder: 'Emoji suchen...' }"
+                :static-texts="{ placeholder: $t('comments.emojiSearch') }"
                 @select="onSelectEmoji"
               />
               <template #fallback><div class="emoji-picker-placeholder" /></template>
@@ -282,7 +293,7 @@ onMounted(async () => {
               v-model="newComment"
               type="text"
               class="input-base"
-              placeholder="Nachricht schreiben..."
+              :placeholder="$t('comments.messagePlaceholder')"
               :disabled="isSending"
               enterkeyhint="send"
               autocomplete="off"
@@ -294,7 +305,7 @@ onMounted(async () => {
               class="footer-btn emoji-btn"
               :class="{ active: showEmojiPicker }"
               @click="showEmojiPicker = !showEmojiPicker"
-              title="Emoji einfügen"
+              :title="$t('comments.emojiInsert')"
             >
               <LucideSmile :size="20" />
             </button>

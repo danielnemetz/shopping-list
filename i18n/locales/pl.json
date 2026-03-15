@@ -1,0 +1,133 @@
+{
+  "common": {
+    "back": "Wstecz",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "unknown": "Nieznany",
+    "offlineBanner": "Jesteś offline. Aplikacja nadal działa."
+  },
+  "index": {
+    "deleteConfirm": "Czy na pewno chcesz usunąć \"{text}\"?",
+    "toDoSection": "Do zrobienia ({count})",
+    "emptyState": "Wszystko zrobione! Czas odpocząć.",
+    "completedSection": "Zrobione ({count})",
+    "loadMore": "Załaduj więcej ({remaining})"
+  },
+  "login": {
+    "tagline": "Robimy zakupy razem.",
+    "emailPlaceholder": "Twój adres e-mail",
+    "sendLink": "Wysyłanie linku...",
+    "requestLink": "Wyślij link do logowania",
+    "errorGeneric": "Wystąpił błąd.",
+    "wrongCode": "Błędny lub wygasły kod.",
+    "emailSent": "E-mail wysłany!",
+    "emailSentInfoIntro": "Wysłaliśmy link do logowania na adres",
+    "emailSentInfoOutro": ". Kliknij link w wiadomości, aby się zalogować.",
+    "or": "LUB",
+    "codeLabel": "Wpisz kod ręcznie:",
+    "checking": "Sprawdzanie...",
+    "login": "Zaloguj się",
+    "changeEmail": "Zmień adres e-mail"
+  },
+  "auth": {
+    "invalidLink": "Nieprawidłowy lub niekompletny link do logowania.",
+    "loginFailed": "Logowanie nie powiodło się. Link mógł wygasnąć.",
+    "signingIn": "Logowanie...",
+    "verifying": "Weryfikujemy Twoje dane.",
+    "oops": "Ups!",
+    "backToLogin": "Wróć do logowania"
+  },
+  "comments": {
+    "title": "Komentarze",
+    "back": "Wstecz",
+    "noComments": "Brak komentarzy.",
+    "startConversation": "Zacznij rozmowę!",
+    "unknown": "Nieznany",
+    "me": "Ja",
+    "justNow": "przed chwilą",
+    "minutesAgo": "{minutes} min temu",
+    "hoursAgo": "{hours} godz. temu",
+    "daysAgo": "{days} dni temu",
+    "syncing": "Synchronizacja...",
+    "typing_one": "{name} pisze...",
+    "typing_other": "{names} piszą...",
+    "emojiSearch": "Szukaj emoji...",
+    "messagePlaceholder": "Napisz wiadomość...",
+    "emojiInsert": "Wstaw emoji"
+  },
+  "activity": {
+    "added": "dodał(a)",
+    "completed": "zaznaczył(a) jako zrobione",
+    "uncompleted": "przywrócił(a)",
+    "deleted": "usunął(a)",
+    "renamed": "zmienił(a) nazwę",
+    "tagCreated": "utworzył(a) tag",
+    "tagRenamed": "zmienił(a) nazwę tagu na",
+    "tagDeleted": "usunął(a) tag",
+    "tagsChanged": "zmienił(a) tagi dla",
+    "edited": "edytował(a)",
+    "unknownDate": "Nieznana data",
+    "todayAt": "Dziś o {time}",
+    "dateAt": "{date} o {time}",
+    "back": "Wstecz",
+    "title": "Aktywność",
+    "loading": "Ładowanie historii...",
+    "empty": "Brak aktywności.",
+    "emptyHint": "Dodaj pozycje do listy, aby zobaczyć tu aktywność.",
+    "unknown": "Nieznany",
+    "loadOlder": "Załaduj starsze..."
+  },
+  "tags": {
+    "title": "Zarządzanie tagami",
+    "loadError": "Błąd ładowania tagów.",
+    "updated": "Tag zaktualizowany.",
+    "saveError": "Błąd zapisu.",
+    "deleteConfirm": "Czy na pewno chcesz usunąć ten tag? Zostanie usunięty ze wszystkich pozycji.",
+    "deleted": "Tag usunięty.",
+    "deleteError": "Błąd usuwania tagu.",
+    "loading": "Ładowanie tagów...",
+    "empty": "Brak utworzonych tagów.",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "edit": "Edytuj",
+    "delete": "Usuń"
+  },
+  "header": {
+    "menu": "Menu",
+    "activities": "Aktywność",
+    "manageTags": "Zarządzaj tagami",
+    "installApp": "Zainstaluj aplikację",
+    "toggleFilter": "Pokaż/ukryj tagi",
+    "theme": "Wygląd",
+    "themeLight": "Jasny",
+    "themeDark": "Ciemny",
+    "themeAuto": "System",
+    "logout": "Wyloguj",
+    "language": "Język",
+    "langDe": "Deutsch",
+    "langEn": "English",
+    "langPl": "Polski"
+  },
+  "items": {
+    "complete": "Zakończ",
+    "reopen": "Przywróć",
+    "tag": "Taguj",
+    "move": "Przesuń",
+    "edit": "Edytuj",
+    "tagPlaceholder": "Tag...",
+    "commentsCount": "{count} komentarzy",
+    "startChat": "Rozpocznij czat"
+  },
+  "tagPopover": {
+    "title": "Tagi dla \"{text}\"",
+    "addTagPlaceholder": "Dodaj nowy tag...",
+    "done": "Gotowe"
+  },
+  "addItem": {
+    "tagPlaceholder": "Wpisz tag...",
+    "addPlaceholder": "Dodaj nową pozycję...",
+    "addTags": "Dodaj tagi"
+  }
+}

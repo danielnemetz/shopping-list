@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const isLoading = ref(true);
 const errorMessage = ref("");
 
@@ -10,7 +11,7 @@ onMounted(async () => {
   const code = route.query.code as string;
 
   if (!email || !code) {
-    errorMessage.value = "Ungültiger oder unvollständiger Anmeldelink.";
+    errorMessage.value = t('auth.invalidLink');
     isLoading.value = false;
     return;
   }
@@ -24,8 +25,7 @@ onMounted(async () => {
     router.push("/");
   } catch (err: any) {
     errorMessage.value =
-      err?.data?.message ||
-      "Anmeldung fehlgeschlagen. Der Link ist möglicherweise abgelaufen.";
+      err?.data?.message || t('auth.loginFailed');
     isLoading.value = false;
   }
 });
@@ -36,19 +36,19 @@ onMounted(async () => {
     <div class="glass-panel login-card text-center">
       <div v-if="isLoading" class="loading-state">
         <LucideLoader class="spin logo-icon mb-4" :size="48" />
-        <h2 class="text-xl font-bold">Anmeldung läuft...</h2>
-        <p class="text-muted mt-2">Wir verifizieren deine Daten.</p>
+        <h2 class="text-xl font-bold">{{ $t('auth.signingIn') }}</h2>
+        <p class="text-muted mt-2">{{ $t('auth.verifying') }}</p>
       </div>
 
       <div v-else class="error-state">
         <LucideXCircle class="logo-icon error mb-4" :size="48" />
-        <h2 class="text-xl font-bold">Hoppla!</h2>
+        <h2 class="text-xl font-bold">{{ $t('auth.oops') }}</h2>
         <p class="error-msg mt-4">{{ errorMessage }}</p>
         <NuxtLink
           to="/login"
           class="btn-primary mt-6 inline-block no-underline"
         >
-          Zurück zum Login
+          {{ $t('auth.backToLogin') }}
         </NuxtLink>
       </div>
     </div>

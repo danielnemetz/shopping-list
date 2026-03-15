@@ -76,7 +76,7 @@ const handleAddItem = () => {
             v-model="tagInput"
             type="text"
             class="tag-inline-input"
-            placeholder="Tag eingeben..."
+            :placeholder="$t('addItem.tagPlaceholder')"
             @keydown="handleTagInputKeydown"
             @blur="tagInput.trim() && addTagToNewItem(tagInput)"
           />
@@ -91,7 +91,7 @@ const handleAddItem = () => {
           v-model="newItemText"
           type="text"
           class="input-base"
-          placeholder="Neuen Eintrag hinzufügen..."
+          :placeholder="$t('addItem.addPlaceholder')"
           :disabled="isSubmitting"
         />
       </div>
@@ -102,7 +102,7 @@ const handleAddItem = () => {
           class="footer-btn tag-toggle-btn"
           :class="{ active: showTagInput }"
           @click="showTagInput = !showTagInput"
-          title="Tags hinzufügen"
+          :title="$t('addItem.addTags')"
         >
           <LucideTag :size="20" />
         </button>

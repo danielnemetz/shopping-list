@@ -63,7 +63,7 @@ const close = (save: boolean) => {
     >
       <div class="tag-popover-panel glass-panel" @click.stop>
         <div class="tag-popover-header">
-          <h3>Tags für "{{ item?.text }}"</h3>
+          <h3>{{ $t('tagPopover.title', { text: item?.text }) }}</h3>
           <button class="tag-popover-close" @click="close(true)">
             <LucideX :size="20" />
           </button>
@@ -75,7 +75,7 @@ const close = (save: boolean) => {
               v-model="popoverTagInput"
               type="text"
               class="popover-tag-input"
-              placeholder="Neuen Tag hinzufügen..."
+              :placeholder="$t('tagPopover.addTagPlaceholder')"
               @keydown.enter.prevent="addTag"
             />
             <button class="popover-add-btn" @click="addTag" :disabled="!popoverTagInput.trim()">
@@ -96,7 +96,7 @@ const close = (save: boolean) => {
           </div>
           
           <div class="tag-popover-footer">
-            <button class="done-btn" @click="close(true)">Fertig</button>
+            <button class="done-btn" @click="close(true)">{{ $t('tagPopover.done') }}</button>
           </div>
         </div>
       </div>
