@@ -322,6 +322,9 @@ const getInitials = (name: string) => {
         :fallback-on-body="true"
         fallback-class="drag-fallback-clone"
         chosen-class="list-item-chosen"
+        :delay="150"
+        :delay-on-touch-only="true"
+        :fallback-tolerance="3"
         @start="isDragging = true"
         @end="isDragging = false"
         class="items-list"
@@ -506,26 +509,6 @@ const getInitials = (name: string) => {
   transform: translateY(-2px);
 }
 
-.ghost-item {
-  opacity: var(--opacity-ghost);
-  transform: scale(0.95);
-}
-
-/* Dragged item (original slot) – bleibt sichtbar als Platzhalter */
-.list-item-chosen {
-  opacity: 0.5;
-}
-
-/* Klon, der Maus/Finger folgt */
-.drag-fallback-clone {
-  opacity: 1;
-  box-shadow: var(--shadow-lg), 0 0 24px rgba(0, 0, 0, 0.15);
-  transform: rotate(2deg);
-  cursor: grabbing;
-  z-index: 9999;
-  border-radius: var(--border-radius);
-}
-
 .animate-fade-in {
   animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -539,5 +522,24 @@ const getInitials = (name: string) => {
   .list-content {
     padding: 0 0.75rem;
   }
+}
+</style>
+
+<style>
+.ghost-item {
+  opacity: var(--opacity-ghost);
+  transform: scale(0.95);
+}
+
+.list-item-chosen {
+  opacity: 0.5;
+}
+
+.drag-fallback-clone {
+  opacity: 1 !important;
+  box-shadow: var(--shadow-lg), 0 0 24px rgba(0, 0, 0, 0.15) !important;
+  cursor: grabbing;
+  z-index: 9999 !important;
+  border-radius: var(--border-radius);
 }
 </style>
