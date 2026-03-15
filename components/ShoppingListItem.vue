@@ -4,7 +4,6 @@ import {
   GripVertical as LucideGripVertical,
   Check as LucideCheck,
   Trash2 as LucideTrash2,
-  Tag as LucideTag,
   X as LucideX,
   CloudUpload as LucideCloudUpload,
   MessageCircle as LucideMessageCircle,
@@ -241,11 +240,9 @@ const getInitials = (name: string) => {
       <div class="item-details-row" v-if="!item.isCompleted">
         <div class="tag-list" v-if="!editingTags" @click.stop="startEditingTags">
           <div v-for="tag in item.tags" :key="tag.id" class="tag-badge">
-            <LucideTag :size="10" />
             {{ tag.name }}
           </div>
           <div class="tag-add-hint" v-if="!item.tags || item.tags.length === 0">
-            <LucideTag :size="12" />
           </div>
         </div>
 

@@ -2,7 +2,6 @@
 import { ref, watch } from "vue";
 import {
   X as LucideX,
-  Tag as LucideTag,
   Plus as LucidePlus,
 } from "lucide-vue-next";
 
@@ -92,7 +91,6 @@ const close = (save: boolean) => {
               :class="{ active: localItem?.tags?.some((t: any) => t.name === tag.name) }"
               @click="toggleTag(tag.name)"
             >
-              <LucideTag :size="14" />
               {{ tag.name }}
             </button>
           </div>
