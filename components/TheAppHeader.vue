@@ -162,6 +162,7 @@ const logout = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
   padding: 1rem 1.5rem;
   padding-top: calc(1rem + env(safe-area-inset-top, 0px));
   margin: 1rem;
@@ -249,7 +250,6 @@ const logout = async () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-left: max(1rem, auto); /* Pushes the right side away from the left side */
 }
 
 .filter-toggle-btn {

@@ -85,11 +85,16 @@ jobs:
             # Extract ADMIN_PASSWORD if present
             ADMIN_PWD=$(grep -E '^ADMIN_PASSWORD=' .env | cut -d '=' -f2 | tr -d '"'"'")
             if [ -n "$ADMIN_PWD" ]; then
-              echo "Broadcasting app:reload event (retrying up to 5 times)..."
-              curl -X POST "https://$APP_DOMAIN/api/admin/reload" \
-                -H "Authorization: Bearer $ADMIN_PWD" \
-                --retry 5 --retry-delay 2 --retry-connrefused \
-                --max-time 10 || echo "Reload trigger failed after retries, but deployment continues."
+              echo "Broadcasting app:reload event (waiting up to 60s for server to be ready)..."
+              for i in {1..12}; do
+                STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://$APP_DOMAIN/api/admin/reload" -H "Authorization: Bearer $ADMIN_PWD")
+                if [ "$STATUS" = "200" ]; then
+                  echo "Reload trigger broadcasted successfully."
+                  break
+                fi
+                echo "Server not ready (HTTP $STATUS). Retrying in 5 seconds..."
+                sleep 5
+              done
             else
               echo "No ADMIN_PASSWORD found in .env, skipping reload trigger."
             fi
