@@ -80,6 +80,37 @@ const handleTagKeydown = (e: KeyboardEvent) => {
   }
 };
 
+const tagEditContainer = ref<HTMLElement | null>(null);
+
+const onOutsideClick = (e: MouseEvent) => {
+  if (editingTags.value && tagEditContainer.value && !tagEditContainer.value.contains(e.target as Node)) {
+    if (editTagInput.value.trim()) {
+      addTag();
+    } else {
+      editingTags.value = false;
+    }
+  }
+};
+
+watch(editingTags, (newVal) => {
+  if (import.meta.client) {
+    if (newVal) {
+      // Small delay to prevent immediate trigger from the click that opened the edit mode
+      setTimeout(() => {
+        window.addEventListener('click', onOutsideClick);
+      }, 0);
+    } else {
+      window.removeEventListener('click', onOutsideClick);
+    }
+  }
+});
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('click', onOutsideClick);
+  }
+});
+
 // Swipe Logic
 const touchStartX = ref(0);
 const swipeOffset = ref(0);
@@ -249,7 +280,7 @@ const getInitials = (name: string) => {
           </div>
         </div>
 
-        <div class="tag-list editing" v-else @click.stop>
+        <div class="tag-list editing" v-else ref="tagEditContainer" @click.stop>
           <LucideTag :size="14" class="tag-list-icon active" />
           <span
             class="tag-badge removable"
