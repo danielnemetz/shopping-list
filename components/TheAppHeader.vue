@@ -84,7 +84,7 @@ const handleInstallClick = () => {
           </button>
         </TheTooltip>
 
-        <TheDropdownMenu :show="isNavOpen" align="left">
+        <TheDropdownMenu :show="isNavOpen" align="left" @close="isNavOpen = false">
           <template #header>
             <span class="menu-title">{{ $t('header.menu') }}</span>
           </template>
@@ -136,7 +136,7 @@ const handleInstallClick = () => {
         </button>
         </TheTooltip>
 
-        <TheDropdownMenu :show="isUserMenuOpen" align="right">
+        <TheDropdownMenu :show="isUserMenuOpen" align="right" @close="isUserMenuOpen = false">
           <template #header>
             <span class="user-name">{{ user?.name }}</span>
             <span class="user-email">{{ user?.email }}</span>

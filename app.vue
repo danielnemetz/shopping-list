@@ -47,6 +47,7 @@ const showOfflineBanner = computed(
       <span>{{ $t('common.offlineBanner') }}</span>
     </div>
     <NuxtPage />
+    <TheConfirmDialog />
   </div>
 </template>
 

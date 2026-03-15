@@ -167,8 +167,16 @@ const saveEdit = (item: any, newText: string) => {
   }
 };
 
+const { confirm: showConfirm } = useConfirm();
+
 const deleteItem = async (item: any) => {
-  if (!confirm(t('index.deleteConfirm', { text: item.text }))) return;
+  const confirmed = await showConfirm({
+    title: t('common.delete'),
+    message: t('index.deleteConfirm', { text: item.text }),
+    confirmLabel: t('common.delete'),
+    variant: 'danger',
+  });
+  if (!confirmed) return;
   const wasCompleted = item.isCompleted;
   const prevItems = [...items.value];
   const prevCompleted = [...completedItemsList.value];

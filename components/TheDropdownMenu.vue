@@ -1,16 +1,56 @@
 <script setup lang="ts">
-defineProps<{
+import { ref, watch, nextTick } from 'vue';
+
+const props = defineProps<{
   show: boolean;
   align?: "left" | "right";
 }>();
+
+const emit = defineEmits<{ (e: 'close'): void }>();
+
+const menuRef = ref<HTMLElement | null>(null);
+
+watch(() => props.show, (open) => {
+  if (open) {
+    nextTick(() => {
+      const first = menuRef.value?.querySelector<HTMLElement>(
+        'a, button, input, [tabindex]:not([tabindex="-1"])'
+      );
+      first?.focus();
+    });
+  }
+});
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    emit('close');
+    return;
+  }
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  e.preventDefault();
+  const items = Array.from(
+    menuRef.value?.querySelectorAll<HTMLElement>(
+      '.dropdown-content a, .dropdown-content button, .dropdown-content input, .dropdown-content [tabindex]:not([tabindex="-1"])'
+    ) ?? [],
+  );
+  if (!items.length) return;
+  const idx = items.indexOf(document.activeElement as HTMLElement);
+  const next = e.key === 'ArrowDown'
+    ? items[(idx + 1) % items.length]
+    : items[(idx - 1 + items.length) % items.length];
+  next?.focus();
+}
 </script>
 
 <template>
   <Transition name="dropdown">
-    <div 
-      v-if="show" 
-      class="dropdown-menu" 
+    <div
+      v-if="show"
+      ref="menuRef"
+      class="dropdown-menu"
       :class="[align === 'right' ? 'align-right' : 'align-left']"
+      role="menu"
+      @keydown="onKeydown"
     >
       <div class="dropdown-header" v-if="$slots.header">
         <slot name="header" />

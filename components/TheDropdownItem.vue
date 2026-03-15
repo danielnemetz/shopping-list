@@ -12,6 +12,7 @@ defineProps<{
     :to="to"
     class="dropdown-item"
     :class="[variant]"
+    role="menuitem"
   >
     <div class="icon-wrapper" v-if="$slots.icon">
       <slot name="icon" />
@@ -26,6 +27,7 @@ defineProps<{
     v-bind="$attrs"
     class="dropdown-item"
     :class="[variant]"
+    role="menuitem"
   >
     <div class="icon-wrapper" v-if="$slots.icon">
       <slot name="icon" />
@@ -56,20 +58,36 @@ defineProps<{
   outline: none;
 }
 
-.dropdown-item:hover {
+.dropdown-item:hover,
+.dropdown-item:focus-visible {
   background: rgba(var(--primary-h), var(--primary-s), 50%, 0.1);
   color: var(--accent-color);
   transform: translateX(6px);
 }
 
-.dropdown-item.danger:hover {
+.dropdown-item:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: -2px;
+}
+
+.dropdown-item.danger:hover,
+.dropdown-item.danger:focus-visible {
   background: rgba(239, 68, 68, 0.1);
   color: var(--danger-color);
 }
 
-.dropdown-item.success:hover {
+.dropdown-item.danger:focus-visible {
+  outline-color: var(--danger-color);
+}
+
+.dropdown-item.success:hover,
+.dropdown-item.success:focus-visible {
   background: rgba(16, 185, 129, 0.1);
   color: var(--success-color);
+}
+
+.dropdown-item.success:focus-visible {
+  outline-color: var(--success-color);
 }
 
 .icon-wrapper {

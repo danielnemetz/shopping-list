@@ -78,10 +78,16 @@ const saveEdit = async (tag: any) => {
   }
 };
 
+const { confirm: showConfirm } = useConfirm();
+
 const deleteTag = async (id: number) => {
-  if (!confirm(t('tags.deleteConfirm'))) {
-    return;
-  }
+  const confirmed = await showConfirm({
+    title: t('common.delete'),
+    message: t('tags.deleteConfirm'),
+    confirmLabel: t('common.delete'),
+    variant: 'danger',
+  });
+  if (!confirmed) return;
 
   try {
     await $fetch(`/api/tags/${id}`, { method: "DELETE" });
