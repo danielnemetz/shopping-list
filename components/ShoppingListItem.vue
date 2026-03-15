@@ -4,6 +4,7 @@ import {
   GripVertical as LucideGripVertical,
   Check as LucideCheck,
   Trash2 as LucideTrash2,
+  Tag as LucideTag,
   X as LucideX,
   CloudUpload as LucideCloudUpload,
   MessageCircle as LucideMessageCircle,
@@ -239,14 +240,17 @@ const getInitials = (name: string) => {
       <!-- Secondary Row: Meta & Tags -->
       <div class="item-details-row" v-if="!item.isCompleted">
         <div class="tag-list" v-if="!editingTags" @click.stop="startEditingTags">
+          <LucideTag :size="14" class="tag-list-icon" />
           <div v-for="tag in item.tags" :key="tag.id" class="tag-badge">
             {{ tag.name }}
           </div>
           <div class="tag-add-hint" v-if="!item.tags || item.tags.length === 0">
+            <!-- Icon only, no text needed as per user request -->
           </div>
         </div>
 
         <div class="tag-list editing" v-else @click.stop>
+          <LucideTag :size="14" class="tag-list-icon active" />
           <span
             class="tag-badge removable"
             v-for="tag in item.tags"
@@ -473,7 +477,7 @@ const getInitials = (name: string) => {
   align-items: center;
   justify-content: space-between; /* Push comment badge to the right */
   gap: 0.8rem;
-  padding-left: 0;
+  padding-left: 0.35rem; /* Optical alignment with drag handle */
   margin-top: 0.4rem;
 }
 
@@ -623,10 +627,21 @@ const getInitials = (name: string) => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.tag-list-icon {
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: all var(--transition-fast);
+}
+
+.tag-list:hover .tag-list-icon,
+.tag-list-icon.active {
+  color: var(--accent-color);
+  opacity: 1;
+}
+
 .tag-add-hint {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
   color: var(--text-muted);
   opacity: 0.4;
   font-size: 0.75rem;

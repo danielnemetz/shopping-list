@@ -143,14 +143,15 @@ const openTagPopover = (item: any) => {
 };
 
 const handlePopoverClose = async (save: boolean, updatedItem: any) => {
+  showTagPopover.value = false;
+  activeTaggingItem.value = null;
+
   if (save && updatedItem) {
     const originalItem = items.value.find(i => i.id === updatedItem.id);
     if (originalItem) {
       await saveItemTags(originalItem, updatedItem.tags.map((t: any) => t.name));
     }
   }
-  showTagPopover.value = false;
-  activeTaggingItem.value = null;
 };
 
 const isDragging = ref(false);
@@ -235,15 +236,15 @@ const getInitials = (name: string) => {
       :syncState="syncState"
     />
 
-    <main class="list-content">
-      <div class="sticky-filter-wrapper">
-        <TagFilterBar 
-          :all-tags="allTags" 
-          :selected-filter-tags="selectedFilterTags"
-          @toggle="toggleFilterTag"
-        />
-      </div>
+    <div class="sticky-filter-wrapper" v-if="allTags.length > 0">
+      <TagFilterBar 
+        :all-tags="allTags" 
+        :selected-filter-tags="selectedFilterTags"
+        @toggle="toggleFilterTag"
+      />
+    </div>
 
+    <main class="list-content">
       <div class="section-title" v-if="openItems.length > 0">
         Zu erledigen ({{ openItems.length }})
       </div>
@@ -361,24 +362,14 @@ const getInitials = (name: string) => {
     transparent 100%
   );
 }
-
 .sticky-filter-wrapper {
-  position: sticky;
-  top: 0;
-  z-index: 100;
   background: var(--bg-color);
-  margin: 0 -1rem;
-  padding: 0.25rem 1rem 0 1rem;
-  border-bottom: 1px solid transparent;
-  transition: all var(--transition-normal);
-}
-
-/* Optional: could use a class to show border when stuck, but CSS only 'sticky-stuck' is tricky without JS. 
-   We'll use a very subtle border/shadow by default or just leave it clean. */
-.sticky-filter-wrapper {
+  padding: 0 1rem;
+  z-index: 100;
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.1);
 }
+
 
 .section-title {
   font-size: 0.75rem;
