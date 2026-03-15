@@ -1,4 +1,4 @@
-CREATE TABLE `auth_codes` (
+CREATE TABLE IF NOT EXISTS `auth_codes` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`user_id` text NOT NULL,
 	`code` text NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE `auth_codes` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `items` (
+CREATE TABLE IF NOT EXISTS `items` (
 	`id` text PRIMARY KEY NOT NULL,
 	`text` text NOT NULL,
 	`is_completed` integer DEFAULT false NOT NULL,
@@ -16,11 +16,11 @@ CREATE TABLE `items` (
 	FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`email` text NOT NULL,
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);
+CREATE UNIQUE INDEX IF NOT EXISTS `users_email_unique` ON `users` (`email`);
