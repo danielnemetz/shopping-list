@@ -10,6 +10,7 @@ import {
   Monitor as LucideMonitor,
   Tags as LucideTags,
   Download as LucideDownload,
+  Filter as LucideFilter,
 } from "lucide-vue-next";
 import { useClickOutside } from "~/composables/useClickOutside";
 import { usePwa } from "~/composables/usePwa";
@@ -17,7 +18,11 @@ import { usePwa } from "~/composables/usePwa";
 const props = defineProps<{
   user: any;
   syncState: any;
+  allTagsCount?: number;
+  showFilterBar?: boolean;
 }>();
+
+const emit = defineEmits(["toggle-filter"]);
 
 const { themeMode, toggleTheme } = useTheme();
 const { isInstallable, install: installApp } = usePwa();
@@ -109,6 +114,16 @@ const logout = async () => {
     </div>
 
     <div class="header-right">
+      <button 
+        v-if="allTagsCount && allTagsCount > 0"
+        class="filter-toggle-btn" 
+        :class="{ active: showFilterBar }"
+        @click.stop="emit('toggle-filter')"
+        title="Tags ein-/ausblenden"
+      >
+        <LucideFilter :size="18" />
+      </button>
+
       <div class="user-menu-container" ref="userMenuRef">
         <button class="avatar-btn" @click.stop="toggleUserMenu">
           <div class="avatar" v-if="user">
@@ -236,9 +251,35 @@ const logout = async () => {
   gap: 1rem;
 }
 
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+}
+
+.filter-toggle-btn.active {
+  color: var(--accent-color);
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.filter-toggle-btn:hover {
+  transform: translateY(-1px);
+  color: var(--accent-light);
+}
+
 .avatar-btn {
   background: var(--accent-gradient);
   border: 2px solid var(--glass-border);
+
   padding: 2px;
   cursor: pointer;
   border-radius: 99px;

@@ -24,6 +24,21 @@ const selectedFilterTags = ref<number[]>([]);
 const showTagPopover = ref(false);
 const activeTaggingItem = ref<any>(null);
 
+const showTagFilterBar = ref(true);
+
+if (import.meta.client) {
+  const savedState = localStorage.getItem('listly_show_filterbar');
+  if (savedState !== null) {
+    showTagFilterBar.value = savedState === 'true';
+  }
+}
+
+watch(showTagFilterBar, (newVal) => {
+  if (import.meta.client) {
+    localStorage.setItem('listly_show_filterbar', String(newVal));
+  }
+});
+
 const fetchTags = async () => {
   try {
     const data = await $fetch<any>("/api/tags");
@@ -234,9 +249,12 @@ const getInitials = (name: string) => {
     <TheAppHeader 
       :user="user" 
       :syncState="syncState"
+      :allTagsCount="allTags.length"
+      :showFilterBar="showTagFilterBar"
+      @toggle-filter="showTagFilterBar = !showTagFilterBar"
     />
 
-    <div class="sticky-filter-wrapper" v-if="allTags.length > 0">
+    <div class="sticky-filter-wrapper" v-if="showTagFilterBar && allTags.length > 0">
       <TagFilterBar 
         :all-tags="allTags" 
         :selected-filter-tags="selectedFilterTags"
