@@ -9,6 +9,7 @@ import {
   LucideTrash2,
   LucideCheckCircle,
   LucideAlertTriangle,
+  LucidePlus,
 } from "lucide-vue-next";
 
 const { data: user } = await useFetch("/api/auth/me");
@@ -22,6 +23,8 @@ const errorMessage = ref("");
 const successMessage = ref("");
 const isEditingId = ref<number | null>(null);
 const editName = ref("");
+const newTagName = ref("");
+const isCreating = ref(false);
 
 const { t } = useI18n();
 const { connect, on } = useSync();
@@ -88,6 +91,40 @@ const deleteTag = async (id: number) => {
   } catch (err: any) {
     errorMessage.value = t('tags.deleteError');
     setTimeout(() => (errorMessage.value = ""), 4000);
+  }
+};
+
+const createTag = async () => {
+  const name = newTagName.value.trim();
+  if (!name) {
+    errorMessage.value = t('tags.nameRequired');
+    setTimeout(() => (errorMessage.value = ""), 4000);
+    return;
+  }
+  const exists = tags.value.some((tag) => tag.name.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    errorMessage.value = t('tags.alreadyExists');
+    setTimeout(() => (errorMessage.value = ""), 4000);
+    return;
+  }
+
+  isCreating.value = true;
+  try {
+    const res = await $fetch<{ success: boolean; tag: { id: number; name: string } }>("/api/tags", {
+      method: "POST",
+      body: { name },
+    });
+    if (res.tag) {
+      tags.value = [...tags.value, res.tag].sort((a, b) => a.name.localeCompare(b.name));
+      newTagName.value = "";
+      successMessage.value = t('tags.created');
+      setTimeout(() => (successMessage.value = ""), 3000);
+    }
+  } catch (err: any) {
+    errorMessage.value = err.data?.statusMessage || t('tags.createError');
+    setTimeout(() => (errorMessage.value = ""), 4000);
+  } finally {
+    isCreating.value = false;
   }
 };
 </script>
@@ -186,6 +223,31 @@ const deleteTag = async (id: number) => {
         </div>
       </Transition>
     </main>
+
+    <footer class="tags-footer glass-panel">
+      <div class="container-centered">
+        <form @submit.prevent="createTag" class="add-form">
+          <div class="input-wrapper">
+            <input
+              v-model="newTagName"
+              type="text"
+              class="input-base"
+              :placeholder="$t('tags.addPlaceholder')"
+              :disabled="isCreating"
+            />
+          </div>
+          <button
+            type="submit"
+            class="footer-btn add-btn"
+            :disabled="isCreating || !newTagName.trim()"
+            :title="$t('tags.create')"
+          >
+            <LucidePlus :size="24" v-if="!isCreating" />
+            <LucideLoader :size="24" class="spin" v-else />
+          </button>
+        </form>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -244,6 +306,84 @@ const deleteTag = async (id: number) => {
 
 .tag-list-card {
   width: 100%;
+}
+
+.tags-footer {
+  margin: 1rem;
+  margin-top: 0.5rem;
+  padding: 1rem 1.25rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  z-index: 500;
+  box-shadow: var(--shadow-md);
+}
+
+.tags-footer .add-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tags-footer .input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.tags-footer .input-base {
+  width: 100%;
+  height: 2.75rem;
+  background: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-color);
+  padding: 0 1.25rem;
+  border-radius: 14px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+  transition: all var(--transition-normal);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.tags-footer .input-base:focus {
+  border-color: var(--accent-color);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.tags-footer .footer-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all var(--transition-bounce);
+  border: none;
+  background: var(--accent-gradient);
+  color: white;
+  box-shadow: 0 6px 15px rgba(99, 102, 241, 0.25);
+}
+
+.tags-footer .footer-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  background: var(--accent-gradient-hover);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+}
+
+.tags-footer .footer-btn:active:not(:disabled) {
+  transform: translateY(-1px) scale(0.95);
+}
+
+.tags-footer .footer-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none;
 }
 
 .tag-list {
