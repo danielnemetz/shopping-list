@@ -1,43 +1,60 @@
 import { ref, onMounted } from 'vue';
 
+let earlyPromptEvent: Event | null = null;
+let listenerRegistered = false;
+
+function ensureGlobalListener() {
+  if (listenerRegistered || typeof window === 'undefined') return;
+  listenerRegistered = true;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    earlyPromptEvent = e;
+  }, { once: true });
+}
+
+ensureGlobalListener();
+
 export const usePwa = () => {
   const deferredPrompt = ref<any>(null);
   const isInstallable = ref(false);
   const isInstalled = ref(false);
 
+  if (import.meta.client) {
+    ensureGlobalListener();
+  }
+
   onMounted(() => {
-    // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
       isInstalled.value = true;
+      return;
     }
 
-    // Listen for installable event
+    if (earlyPromptEvent) {
+      deferredPrompt.value = earlyPromptEvent;
+      isInstallable.value = true;
+      earlyPromptEvent = null;
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
-      // Stash the event so it can be triggered later.
+      e.preventDefault();
       deferredPrompt.value = e;
       isInstallable.value = true;
-      console.log('[PWA] App is installable');
     });
 
     window.addEventListener('appinstalled', () => {
       isInstalled.value = true;
       isInstallable.value = false;
       deferredPrompt.value = null;
-      console.log('[PWA] App installed successfully');
     });
   });
 
   const install = async () => {
     if (!deferredPrompt.value) return;
 
-    // Show the prompt
     deferredPrompt.value.prompt();
-    
-    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.value.userChoice;
-    console.log(`[PWA] User response to install prompt: ${outcome}`);
-    
-    // We've used the prompt, and can't use it again, throw it away
+    console.log(`[PWA] User response: ${outcome}`);
+
     deferredPrompt.value = null;
     isInstallable.value = false;
   };
