@@ -23,6 +23,9 @@ logs
 .env.*
 !.env.example
 
+# Local security notes (don't commit)
+docs/SECURITY.md
+
 # Local Database & Docker persistence
 sqlite.db
 data/

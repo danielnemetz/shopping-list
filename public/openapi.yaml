@@ -1,0 +1,343 @@
+openapi: 3.0.3
+info:
+  title: Listly API
+  description: API für die gemeinsame Einkaufsliste Listly. Die meisten Endpoints erfordern eine gültige Session (Cookie nach Login).
+  version: 1.0.0
+
+servers:
+  - url: /
+    description: Relativer Pfad (gleiche Origin wie die App)
+
+tags:
+  - name: Auth
+    description: Login, Session, Logout
+  - name: Items
+    description: Einkaufsliste (Einträge)
+  - name: Tags
+    description: Tag-Verwaltung
+  - name: Activities
+    description: Aktivitätsverlauf
+
+paths:
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Aktuelle Session
+      responses:
+        '200':
+          description: Session-Daten (user oder null bei Admin)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+                  isAdmin: { type: boolean }
+        '401':
+          description: Nicht eingeloggt
+
+  /api/auth/request-code:
+    post:
+      tags: [Auth]
+      summary: Login-Link anfordern (E-Mail)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200':
+          description: Code wurde per E-Mail versendet
+        '400':
+          description: Ungültige Anfrage
+
+  /api/auth/verify:
+    post:
+      tags: [Auth]
+      summary: Login mit Code bestätigen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string }
+      responses:
+        '200':
+          description: Login erfolgreich (Session-Cookie gesetzt)
+        '401':
+          description: Ungültiger Code
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Abmelden
+      responses:
+        '200':
+          description: Session gelöscht
+
+  /api/items:
+    get:
+      tags: [Items]
+      summary: Einträge abrufen
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: completed
+          in: query
+          schema: { type: string, enum: ['0', '1', 'true', 'false'] }
+          description: Nur erledigte (1/true) oder nur offene (0/false)
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Liste der Einträge (Array oder paginiert bei completed=1)
+        '401':
+          description: Nicht eingeloggt
+    post:
+      tags: [Items]
+      summary: Neuen Eintrag anlegen
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+                tags: { type: array, items: { type: string } }
+      responses:
+        '200':
+          description: Angelegter Eintrag
+        '400':
+          description: text fehlt oder leer
+        '401':
+          description: Nicht eingeloggt
+
+  /api/items/{id}:
+    get:
+      tags: [Items]
+      summary: Einzelnen Eintrag abrufen
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Eintrag inkl. Tags und Kommentar-Anzahl
+        '404':
+          description: Eintrag nicht gefunden
+    put:
+      tags: [Items]
+      summary: Eintrag aktualisieren
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: { type: string }
+                isCompleted: { type: boolean }
+                position: { type: number }
+                tags: { type: array, items: { type: string } }
+      responses:
+        '200':
+          description: Aktualisiert
+        '404':
+          description: Eintrag nicht gefunden
+    delete:
+      tags: [Items]
+      summary: Eintrag löschen
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Gelöscht
+        '404':
+          description: Eintrag nicht gefunden
+
+  /api/items/{id}/comments:
+    get:
+      tags: [Items]
+      summary: Kommentare zu einem Eintrag
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Liste der Kommentare
+    post:
+      tags: [Items]
+      summary: Kommentar schreiben
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+      responses:
+        '200':
+          description: Kommentar angelegt
+        '404':
+          description: Eintrag nicht gefunden
+
+  /api/tags:
+    get:
+      tags: [Tags]
+      summary: Alle Tags
+      security: [{ cookieAuth: [] }]
+      responses:
+        '200':
+          description: Liste der Tags
+    post:
+      tags: [Tags]
+      summary: Neuen Tag anlegen
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        '200':
+          description: Tag angelegt oder bereits vorhanden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  tag: { $ref: '#/components/schemas/Tag' }
+
+  /api/tags/{id}:
+    put:
+      tags: [Tags]
+      summary: Tag umbenennen
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        '200':
+          description: Umbenannt
+        '404':
+          description: Tag nicht gefunden
+    delete:
+      tags: [Tags]
+      summary: Tag löschen
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Gelöscht
+        '404':
+          description: Tag nicht gefunden
+
+  /api/activities:
+    get:
+      tags: [Activities]
+      summary: Aktivitätsverlauf (paginiert)
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: action
+          in: query
+          schema: { type: string }
+          description: Filter nach Aktion (z. B. added, completed, tag_created)
+        - name: userId
+          in: query
+          schema: { type: string }
+          description: Filter nach Benutzer-ID
+        - name: search
+          in: query
+          schema: { type: string }
+          description: Suche in item_name (LIKE)
+      responses:
+        '200':
+          description: Aktivitäten inkl. Pagination und filterOptions.users
+        '401':
+          description: Nicht eingeloggt
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: nuxt-session
+      description: Session-Cookie nach Login (auth/verify)
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+    Tag:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+
+security:
+  - cookieAuth: []

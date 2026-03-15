@@ -110,6 +110,18 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* API-Docs: allow page scroll (html, body, Nuxt root) */
+html.api-docs-scroll,
+body.api-docs-scroll {
+  overflow: auto;
+  height: auto;
+  min-height: 100%;
+}
+
+body.api-docs-scroll > div {
+  min-height: 100%;
+}
+
 /* Typography */
 h1 {
   font-size: 1.75rem;
@@ -138,12 +150,28 @@ p {
   overflow: hidden;
 }
 
+/* API-Docs: full viewport, own scroll (opt-out from app frame) */
+.api-docs-root {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  overflow: auto;
+  display: block;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* For desktop users, limit width to create a centered "app" constraint */
 @media (min-width: 640px) {
   body {
     display: flex;
     justify-content: center;
     background-color: #050505; /* Darker outside the app */
+  }
+
+  body.api-docs-scroll {
+    display: block;
+    background-color: var(--bg-color);
   }
 
   .app-container {

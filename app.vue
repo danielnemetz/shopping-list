@@ -23,7 +23,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="app-container">
+  <div :class="route.path === '/api-docs' ? 'api-docs-root' : 'app-container'">
     <VitePwaManifest />
     <div class="offline-global-banner" v-if="showOfflineBanner">
       <LucideWifiOff :size="14" />
