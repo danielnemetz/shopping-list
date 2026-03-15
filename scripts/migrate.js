@@ -9,7 +9,8 @@ import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = process.env.DB_URL || './sqlite.db';
+// Same env vars as server/utils/db.ts so migrations run against the same DB the app uses
+const dbPath = process.env.DB_URL || process.env.NUXT_DB_URL || './sqlite.db';
 const sqlite = new Database(dbPath);
 const db = drizzle(sqlite);
 
@@ -54,7 +55,24 @@ for (const idx of indexes) {
   }
 }
 
-// --- Step 3: Ensure system admin user exists ---
+// --- Step 3: Migrate comment_reactions into reactions (if old table exists) ---
+const tableList = sqlite.prepare(
+  "SELECT name FROM sqlite_master WHERE type='table' AND name='comment_reactions'"
+).all();
+if (tableList.length > 0) {
+  try {
+    sqlite.prepare(`
+      INSERT OR IGNORE INTO reactions (entity_type, entity_id, user_id, emoji)
+      SELECT 'comment', CAST(comment_id AS TEXT), user_id, emoji FROM comment_reactions
+    `).run();
+    sqlite.prepare('DROP TABLE comment_reactions').run();
+    console.log('   ✅ Migrated comment_reactions → reactions');
+  } catch (err) {
+    console.warn('   ⚠️  comment_reactions migration:', err.message);
+  }
+}
+
+// --- Step 4: Ensure system admin user exists ---
 sqlite.prepare(`
   INSERT OR IGNORE INTO users (id, name, email, created_at)
   VALUES (?, ?, ?, ?)

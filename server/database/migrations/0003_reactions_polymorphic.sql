@@ -1,4 +1,4 @@
-CREATE TABLE `reactions` (
+CREATE TABLE IF NOT EXISTS `reactions` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`entity_type` text NOT NULL,
 	`entity_id` text NOT NULL,
@@ -7,11 +7,6 @@ CREATE TABLE `reactions` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE INDEX `idx_reactions_entity` ON `reactions` (`entity_type`,`entity_id`);
+CREATE INDEX IF NOT EXISTS `idx_reactions_entity` ON `reactions` (`entity_type`,`entity_id`);
 --> statement-breakpoint
-CREATE UNIQUE INDEX `reactions_entity_user_emoji` ON `reactions` (`entity_type`,`entity_id`,`user_id`,`emoji`);
---> statement-breakpoint
-INSERT INTO reactions (entity_type, entity_id, user_id, emoji)
-SELECT 'comment', CAST(comment_id AS TEXT), user_id, emoji FROM comment_reactions;
---> statement-breakpoint
-DROP TABLE `comment_reactions`;
+CREATE UNIQUE INDEX IF NOT EXISTS `reactions_entity_user_emoji` ON `reactions` (`entity_type`,`entity_id`,`user_id`,`emoji`);
