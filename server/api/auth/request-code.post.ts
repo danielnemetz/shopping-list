@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, lt } from 'drizzle-orm';
 import { db } from '../../utils/db';
 import { users, authCodes } from '../../database/schema';
 import { sendLoginCode } from '../../utils/mail';
@@ -11,6 +11,9 @@ export default defineEventHandler(async (event) => {
   if (!email) {
     throw createError({ statusCode: 400, statusMessage: 'Email is required' });
   }
+
+  // Remove expired codes so the table doesn't grow indefinitely
+  await db.delete(authCodes).where(lt(authCodes.expiresAt, new Date())).run();
 
   // Check if user exists (Invited users must exist beforehand)
   const userRecord = await db.select().from(users).where(eq(users.email, email)).get();
