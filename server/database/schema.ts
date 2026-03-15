@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -46,6 +46,18 @@ export const comments = sqliteTable('comments', {
 }, (table) => [
   index('idx_comments_item_id').on(table.itemId),
   index('idx_comments_item_created').on(table.itemId, table.createdAt),
+]);
+
+/** Polymorphic reactions: comments and items (entity_type + entity_id) */
+export const reactions = sqliteTable('reactions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  entityType: text('entity_type').notNull(), // 'comment' | 'item'
+  entityId: text('entity_id').notNull(),
+  userId: text('user_id').notNull().references(() => users.id),
+  emoji: text('emoji').notNull(),
+}, (table) => [
+  index('idx_reactions_entity').on(table.entityType, table.entityId),
+  uniqueIndex('reactions_entity_user_emoji').on(table.entityType, table.entityId, table.userId, table.emoji),
 ]);
 
 export const tags = sqliteTable('tags', {

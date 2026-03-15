@@ -24,6 +24,7 @@ const emit = defineEmits<{
   (e: "save-tags", item: any, tags: string[]): void;
   (e: "open-tag-popover", item: any): void;
   (e: "click-comments", itemId: string): void;
+  (e: "reaction"): void;
 }>();
 
 // Edit State
@@ -290,15 +291,23 @@ const onMouseUp = () => onSwipeEnd();
           />
         </div>
 
-        <button
-          class="meta-comment-btn"
-          @click.stop="emit('click-comments', item.id)"
-          :class="{ 'has-comments': item.commentCount > 0, 'empty-comments': !item.commentCount }"
-          :title="item.commentCount > 0 ? $t('items.commentsCount', { count: item.commentCount }) : $t('items.startChat')"
-        >
-          <LucideMessageCircle :size="14" />
-          <span v-if="item.commentCount > 0">{{ item.commentCount }}</span>
-        </button>
+        <div class="item-meta-actions">
+          <ReactionTrigger
+            entity-type="item"
+            :entity-id="item.id"
+            :reactions="item.reactions ?? []"
+            @reaction="emit('reaction')"
+          />
+          <button
+            class="meta-comment-btn"
+            @click.stop="emit('click-comments', item.id)"
+            :class="{ 'has-comments': item.commentCount > 0, 'empty-comments': !item.commentCount }"
+            :title="item.commentCount > 0 ? $t('items.commentsCount', { count: item.commentCount }) : $t('items.startChat')"
+          >
+            <LucideMessageCircle :size="14" />
+            <span v-if="item.commentCount > 0">{{ item.commentCount }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -508,6 +517,13 @@ const onMouseUp = () => onSwipeEnd();
   flex-wrap: wrap;
   cursor: pointer;
   min-height: 1.5rem;
+}
+
+.item-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .meta-comment-btn {

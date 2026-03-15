@@ -328,6 +328,7 @@ const getInitials = (name: string) => {
             @save-tags="saveItemTags"
             @open-tag-popover="openTagPopover"
             @click-comments="(id) => router.push(`/comments/${id}`)"
+            @reaction="refreshAllItems"
           />
         </template>
       </draggable>
@@ -349,6 +350,7 @@ const getInitials = (name: string) => {
           @save-tags="saveItemTags"
           @open-tag-popover="openTagPopover"
           @click-comments="(id) => router.push(`/comments/${id}`)"
+          @reaction="refreshAllItems"
         />
 
         <button

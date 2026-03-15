@@ -7,7 +7,10 @@ import * as schema from '../database/schema';
 // DB path: same default as drizzle.config.ts so app and migrations use one file
 const rawPath = process.env.DB_URL || process.env.NUXT_DB_URL || 'data/sqlite.db';
 const dbPath = isAbsolute(rawPath) ? rawPath : resolve(process.cwd(), rawPath);
-mkdirSync(dirname(dbPath), { recursive: true });
+// Only create directory for relative paths (dev); absolute paths (e.g. Docker /app/data) must exist or be mounted
+if (!isAbsolute(rawPath)) {
+  mkdirSync(dirname(dbPath), { recursive: true });
+}
 const sqlite = new Database(dbPath);
 
 // Creates a single SQLite connection to be reused in the server

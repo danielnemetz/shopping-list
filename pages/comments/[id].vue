@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, computed, onMounted, nextTick, watch, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import EmojiPicker from "vue3-emoji-picker";
 import "vue3-emoji-picker/css";
@@ -10,7 +10,10 @@ import {
   Loader as LucideLoader,
   CloudUpload as LucideCloudUpload,
   Smile as LucideSmile,
+  Plus as LucidePlus,
 } from "lucide-vue-next";
+
+const STANDARD_REACTIONS = ['👍', '👎', '❤️', '😂', '😮', '😢'] as const;
 import { useClickOutside } from "~/composables/useClickOutside";
 import { useTheme } from "~/composables/useTheme";
 
@@ -37,6 +40,15 @@ const typingUsers = ref<{ id: string, name: string }[]>([]);
 const currentUser = ref<any>(null);
 const showEmojiPicker = ref(false);
 const emojiPickerWrapRef = ref<HTMLElement | null>(null);
+const emojiPickerTarget = ref<number | null>(null);
+const reactionPickerWrapRef = ref<HTMLElement | null>(null);
+const reactionMenuOpen = ref<number | null>(null);
+const reactionMenuRef = ref<HTMLElement | null>(null);
+const reactionPopupRef = ref<HTMLElement | null>(null);
+const reactionPopupStyle = ref<Record<string, string>>({});
+const reactionPopupPositioned = ref(false);
+const VIEWPORT_PADDING = 8;
+const POPUP_GAP = 6;
 
 const { themeMode } = useTheme();
 const emojiPickerTheme = computed(() =>
@@ -46,6 +58,61 @@ const emojiPickerTheme = computed(() =>
 useClickOutside(emojiPickerWrapRef, () => {
   showEmojiPicker.value = false;
 });
+useClickOutside(reactionPickerWrapRef, () => {
+  emojiPickerTarget.value = null;
+});
+function updateReactionPopupPosition() {
+  if (!reactionMenuRef.value || !reactionPopupRef.value || !import.meta.client) return;
+  const anchor = reactionMenuRef.value.getBoundingClientRect();
+  const popup = reactionPopupRef.value.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const centerX = anchor.left + anchor.width / 2;
+  let left = centerX - popup.width / 2;
+  left = Math.max(VIEWPORT_PADDING, Math.min(vw - popup.width - VIEWPORT_PADDING, left));
+
+  const spaceAbove = anchor.top;
+  const spaceBelow = vh - anchor.bottom;
+  const goAbove = spaceAbove >= popup.height + POPUP_GAP || spaceAbove >= spaceBelow;
+
+  let top: number;
+  if (goAbove) {
+    top = anchor.top - popup.height - POPUP_GAP;
+  } else {
+    top = anchor.bottom + POPUP_GAP;
+  }
+  top = Math.max(VIEWPORT_PADDING, Math.min(vh - popup.height - VIEWPORT_PADDING, top));
+
+  reactionPopupStyle.value = {
+    top: `${top}px`,
+    left: `${left}px`,
+  };
+  reactionPopupPositioned.value = true;
+}
+
+watch(reactionMenuOpen, (id) => {
+  reactionPopupPositioned.value = false;
+  if (id != null) {
+    nextTick(() => {
+      updateReactionPopupPosition();
+      requestAnimationFrame(updateReactionPopupPosition);
+    });
+  }
+});
+
+function onReactionDocumentClick(e: MouseEvent) {
+  if (reactionMenuOpen.value == null) return;
+  const target = e.target as Node;
+  if (reactionMenuRef.value?.contains(target) || reactionPopupRef.value?.contains(target)) return;
+  reactionMenuOpen.value = null;
+  emojiPickerTarget.value = null;
+}
+
+if (import.meta.client) {
+  onMounted(() => document.addEventListener("click", onReactionDocumentClick, true));
+  onUnmounted(() => document.removeEventListener("click", onReactionDocumentClick, true));
+}
 
 const onSelectEmoji = (emoji: { i: string }) => {
   newComment.value += emoji.i;
@@ -101,7 +168,8 @@ const sendComment = async () => {
     user: {
       id: currentUser.value?.id,
       name: currentUser.value?.name || t('comments.me')
-    }
+    },
+    reactions: [],
   };
 
   comments.value.push(optimisticComment);
@@ -158,6 +226,37 @@ const typingText = computed(() => {
 });
 
 const isOwnMessage = (comment: any) => comment.user?.id === currentUser.value?.id;
+
+const canReact = (comment: any) => typeof comment.id === 'number';
+
+const toggleReaction = async (commentId: number, emoji: string) => {
+  try {
+    await $fetch(`/api/items/${itemId}/comments/${commentId}/reactions`, {
+      method: 'POST',
+      body: { emoji },
+    });
+    await fetchComments();
+  } catch (e) {
+    console.error('Failed to toggle reaction', e);
+  }
+};
+
+const onSelectReactionEmoji = (emoji: { i: string }) => {
+  const cid = emojiPickerTarget.value;
+  if (cid != null) {
+    toggleReaction(cid, emoji.i);
+    emojiPickerTarget.value = null;
+    reactionMenuOpen.value = null;
+  }
+};
+
+const pickReactionAndClose = (emoji: string) => {
+  const cid = reactionMenuOpen.value;
+  if (cid != null) {
+    toggleReaction(cid, emoji);
+    reactionMenuOpen.value = null;
+  }
+};
 
 const showAvatar = (index: number) => {
   if (index === comments.value.length - 1) return true;
@@ -252,6 +351,38 @@ onMounted(async () => {
             <div v-if="isPending(comment.id)" class="pending-icon" :title="$t('comments.syncing')">
               <LucideCloudUpload :size="12" />
             </div>
+            <!-- Reaction trigger (popup is teleported to body) -->
+            <div
+              v-if="canReact(comment)"
+              class="reaction-anchor"
+              :ref="el => { if (reactionMenuOpen === comment.id) reactionMenuRef = el as HTMLElement }"
+            >
+              <button
+                type="button"
+                class="reaction-trigger"
+                :class="{ active: reactionMenuOpen === comment.id }"
+                :title="$t('comments.addReaction')"
+                @click="reactionMenuOpen = reactionMenuOpen === comment.id ? null : comment.id"
+              >
+                <LucideSmile :size="16" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Reaction pills (existing reactions) -->
+          <div v-if="canReact(comment) && (comment.reactions?.length ?? 0) > 0" class="reaction-pills">
+            <button
+              v-for="r of comment.reactions"
+              :key="r.emoji"
+              type="button"
+              class="reaction-pill"
+              :class="{ 'user-reacted': r.userReacted }"
+              :title="r.count > 1 ? `${r.emoji} ${r.count}` : r.emoji"
+              @click="toggleReaction(comment.id, r.emoji)"
+            >
+              <span class="reaction-emoji">{{ r.emoji }}</span>
+              <span v-if="r.count > 1" class="reaction-count">{{ r.count }}</span>
+            </button>
           </div>
 
           <div class="message-time">{{ formatTime(comment.createdAt) }}</div>
@@ -321,6 +452,52 @@ onMounted(async () => {
         </form>
       </div>
     </footer>
+
+    <!-- Reaction popup (teleported so it is not clipped by overflow) -->
+    <Teleport to="body">
+      <Transition name="reaction-popup">
+        <div
+          v-if="reactionMenuOpen != null"
+          ref="reactionPopupRef"
+          class="reaction-popup reaction-popup-fixed"
+          :class="{ positioned: reactionPopupPositioned }"
+          :style="reactionPopupStyle"
+        >
+          <button
+            v-for="emoji of STANDARD_REACTIONS"
+            :key="emoji"
+            type="button"
+            class="reaction-quick-btn"
+            @click="pickReactionAndClose(emoji)"
+          >
+            {{ emoji }}
+          </button>
+          <button
+            type="button"
+            class="reaction-more-btn"
+            :class="{ active: emojiPickerTarget === reactionMenuOpen }"
+            :title="$t('comments.reactWithEmoji')"
+            @click="emojiPickerTarget = emojiPickerTarget === reactionMenuOpen ? null : reactionMenuOpen"
+          >
+            <LucidePlus :size="14" />
+          </button>
+          <Transition name="picker">
+            <div v-if="emojiPickerTarget === reactionMenuOpen" class="reaction-picker-dropdown">
+              <ClientOnly>
+                <EmojiPicker
+                  :native="true"
+                  :theme="emojiPickerTheme"
+                  :hide-search="false"
+                  :static-texts="{ placeholder: $t('comments.emojiSearch') }"
+                  @select="onSelectReactionEmoji"
+                />
+                <template #fallback><div class="emoji-picker-placeholder" /></template>
+              </ClientOnly>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -521,6 +698,184 @@ onMounted(async () => {
   color: var(--text-muted);
   padding: 0.1rem 0.25rem 0;
   opacity: 0.7;
+}
+
+/* ── Reaction anchor (wraps trigger + popup) ── */
+.reaction-anchor {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ── Reaction trigger (smiley next to bubble) ── */
+.reaction-trigger {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.message-row:hover .reaction-trigger,
+.reaction-trigger.active {
+  opacity: 1;
+}
+
+/* On touch devices, always show the trigger */
+@media (hover: none) {
+  .reaction-trigger {
+    opacity: 0.5;
+  }
+}
+
+.reaction-trigger:hover,
+.reaction-trigger.active {
+  background: var(--glass-bg);
+  color: var(--accent-color);
+}
+
+/* ── Reaction popup (quick-pick bar) ── */
+.reaction-popup {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-md);
+  width: max-content;
+}
+
+.reaction-popup-fixed {
+  position: fixed;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.reaction-popup-fixed.positioned {
+  opacity: 1;
+}
+
+.reaction-quick-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.15rem;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.reaction-quick-btn:hover {
+  transform: scale(1.25);
+  background: var(--bg-surface-elevated);
+}
+
+.reaction-quick-btn:active {
+  transform: scale(0.95);
+}
+
+.reaction-more-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reaction-more-btn:hover {
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+}
+
+.reaction-more-btn.active {
+  background: var(--accent-color);
+  color: white;
+}
+
+.reaction-popup-enter-active,
+.reaction-popup-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.reaction-popup-enter-from,
+.reaction-popup-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* ── Reaction pills (existing reactions below bubble) ── */
+.reaction-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+  padding: 0 0.15rem;
+}
+
+.reaction-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--glass-bg);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.reaction-pill:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--accent-color);
+}
+
+.reaction-pill.user-reacted {
+  border-color: var(--accent-color);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.reaction-emoji {
+  line-height: 1;
+}
+
+.reaction-count {
+  font-size: 0.7rem;
+  opacity: 0.9;
+}
+
+/* ── Reaction picker dropdown (from popup) ── */
+.reaction-picker-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 0.35rem;
+  z-index: 100;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 /* ── Typing Indicator ── */

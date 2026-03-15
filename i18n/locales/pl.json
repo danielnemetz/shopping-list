@@ -55,7 +55,9 @@
     "typing_other": "{names} piszą...",
     "emojiSearch": "Szukaj emoji...",
     "messagePlaceholder": "Napisz wiadomość...",
-    "emojiInsert": "Wstaw emoji"
+    "emojiInsert": "Wstaw emoji",
+    "addReaction": "Dodaj reakcję",
+    "reactWithEmoji": "Zareaguj dowolnym emoji"
   },
   "activity": {
     "added": "dodał(a)",

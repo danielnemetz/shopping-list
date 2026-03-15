@@ -1,7 +1,12 @@
 import { sqlite } from '../../utils/db';
 import { requireUserSession } from '../../utils/auth';
+import { getReactionsForEntities } from '../../utils/reactions';
 
-const mapRow = (row: any, tagsByItem: Map<string, { id: number; name: string }[]>) => ({
+const mapRow = (
+  row: any,
+  tagsByItem: Map<string, { id: number; name: string }[]>,
+  reactionsByItem: Map<string, { emoji: string; count: number; userReacted: boolean }[]>,
+) => ({
   id: row.id,
   text: row.text,
   isCompleted: !!row.is_completed,
@@ -15,10 +20,12 @@ const mapRow = (row: any, tagsByItem: Map<string, { id: number; name: string }[]
   creatorName: row.creatorName,
   commentCount: row.commentCount ?? 0,
   tags: tagsByItem.get(row.id) || [],
+  reactions: reactionsByItem.get(row.id) ?? [],
 });
 
 export default defineEventHandler(async (event) => {
-  await requireUserSession(event);
+  const session = await requireUserSession(event);
+  const userId = session.userId;
 
   const query = getQuery(event);
   const completedOnly = query.completed === '1' || query.completed === 'true';
@@ -26,7 +33,6 @@ export default defineEventHandler(async (event) => {
   const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 20));
   const offset = (page - 1) * limit;
 
-  // Comment counts in one go via JOIN (avoids N correlated subqueries)
   const commentCountStmt = sqlite.prepare(`
     SELECT item_id, COUNT(*) as cnt FROM comments GROUP BY item_id
   `);
@@ -68,10 +74,12 @@ export default defineEventHandler(async (event) => {
       if (!tagsByItem.has(row.item_id)) tagsByItem.set(row.item_id, []);
       tagsByItem.get(row.item_id)!.push({ id: row.tagId, name: row.tagName });
     }
+    const itemIds = rawItems.map((r: any) => r.id);
+    const reactionsByItem = getReactionsForEntities('item', itemIds, userId);
 
-    const items = rawItems.map((row) => {
+    const items = rawItems.map((row: any) => {
       const r = { ...row, commentCount: commentCounts[row.id] ?? 0 };
-      return mapRow(r, tagsByItem);
+      return mapRow(r, tagsByItem, reactionsByItem);
     });
 
     return {
@@ -107,8 +115,11 @@ export default defineEventHandler(async (event) => {
     tagsByItem.get(row.item_id)!.push({ id: row.tagId, name: row.tagName });
   }
 
-  return rawItems.map((row) => {
+  const itemIds = rawItems.map((r: any) => r.id);
+  const reactionsByItem = getReactionsForEntities('item', itemIds, userId);
+
+  return rawItems.map((row: any) => {
     const r = { ...row, commentCount: commentCounts[row.id] ?? 0 };
-    return mapRow(r, tagsByItem);
+    return mapRow(r, tagsByItem, reactionsByItem);
   });
 });

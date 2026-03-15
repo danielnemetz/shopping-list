@@ -1,23 +1,27 @@
 import { sqlite } from '../../../utils/db';
 import { requireUserSession } from '../../../utils/auth';
+import { getReactionsForEntities } from '../../../utils/reactions';
 
 export default defineEventHandler(async (event) => {
-  await requireUserSession(event);
+  const session = await requireUserSession(event);
+  const userId = session.userId;
 
   const itemId = getRouterParam(event, 'id');
   if (!itemId) {
     throw createError({ statusCode: 400, statusMessage: 'Item ID is required' });
   }
 
-  const stmt = sqlite.prepare(`
+  const commentsStmt = sqlite.prepare(`
     SELECT c.*, u.name as userName
     FROM comments c
     LEFT JOIN users u ON c.user_id = u.id
     WHERE c.item_id = ?
     ORDER BY c.created_at ASC
   `);
+  const rawComments = commentsStmt.all(itemId) as any[];
 
-  const rawComments = stmt.all(itemId) as any[];
+  const commentIds = rawComments.map((c: any) => String(c.id));
+  const reactionsByComment = getReactionsForEntities('comment', commentIds, userId);
 
   return {
     success: true,
@@ -32,7 +36,8 @@ export default defineEventHandler(async (event) => {
       user: {
         id: row.user_id,
         name: row.userName,
-      }
+      },
+      reactions: reactionsByComment.get(String(row.id)) ?? [],
     })),
   };
 });

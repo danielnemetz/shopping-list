@@ -55,7 +55,9 @@
     "typing_other": "{names} schreiben...",
     "emojiSearch": "Emoji suchen...",
     "messagePlaceholder": "Nachricht schreiben...",
-    "emojiInsert": "Emoji einfügen"
+    "emojiInsert": "Emoji einfügen",
+    "addReaction": "Reaktion hinzufügen",
+    "reactWithEmoji": "Mit beliebigem Emoji reagieren"
   },
   "activity": {
     "added": "hat hinzugefügt",

@@ -1,9 +1,9 @@
 import { sqlite } from '../../utils/db';
 import { requireUserSession } from '../../utils/auth';
+import { getReactionsForEntities } from '../../utils/reactions';
 
 export default defineEventHandler(async (event) => {
-  await requireUserSession(event);
-
+  const session = await requireUserSession(event);
   const id = getRouterParam(event, 'id');
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Item ID is required' });
@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
     WHERE it.item_id = ?
   `);
   const tagRows = tagStmt.all(id) as any[];
+  const reactionsByItem = getReactionsForEntities('item', [id], session.userId);
 
   return {
     id: row.id,
@@ -43,5 +44,6 @@ export default defineEventHandler(async (event) => {
     creatorName: row.creatorName,
     commentCount: row.commentCount ?? 0,
     tags: tagRows.map((r) => ({ id: r.tagId, name: r.tagName })),
+    reactions: reactionsByItem.get(id) ?? [],
   };
 });
