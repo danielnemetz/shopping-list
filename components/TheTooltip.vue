@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { useFloatingPosition } from '~/composables/useFloatingPosition';
 
 const props = withDefaults(
   defineProps<{
@@ -31,10 +32,14 @@ let longPressId: ReturnType<typeof setTimeout> | null = null;
 /** Consume next click (touch-generated) so trigger does not run (e.g. no accidental toggle). */
 let consumeNextClick = false;
 
-const VIEWPORT_PADDING = 8;
-const GAP = 6;
 const ARROW_INSET = 12;
 const LONG_PRESS_MS = props.longPressMs > 0 ? props.longPressMs : 500;
+
+const { position: positionFloating } = useFloatingPosition({
+  padding: 8,
+  gap: 6,
+  arrowInset: ARROW_INSET,
+});
 
 const hasContent = () => typeof props.content === 'string' && props.content.trim().length > 0;
 const hasLongPress = () => props.longPressMs > 0 && hasContent();
@@ -44,33 +49,13 @@ function updatePosition() {
 
   const anchor = wrapperRef.value.getBoundingClientRect();
   const tt = tooltipRef.value.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const centerX = anchor.left + anchor.width / 2;
-  let left = centerX - tt.width / 2;
-  left = Math.max(VIEWPORT_PADDING, Math.min(vw - tt.width - VIEWPORT_PADDING, left));
-
-  const spaceAbove = anchor.top;
-  const spaceBelow = vh - anchor.bottom;
-  const goAbove = spaceAbove >= tt.height + GAP || spaceAbove >= spaceBelow;
-
-  let top: number;
-  if (goAbove) {
-    top = anchor.top - tt.height - GAP;
-    side.value = 'above';
-  } else {
-    top = anchor.bottom + GAP;
-    side.value = 'below';
-  }
-
-  const arrowX = centerX - left;
-  const arrowLeft = Math.max(ARROW_INSET, Math.min(tt.width - ARROW_INSET, arrowX));
+  const { top, left, side: newSide, arrowLeft } = positionFloating(anchor, tt);
+  side.value = newSide;
 
   tooltipStyle.value = {
     top: `${top}px`,
     left: `${left}px`,
-    '--arrow-left': `${arrowLeft}px`,
+    '--arrow-left': `${arrowLeft ?? 0}px`,
   };
   positioned.value = true;
 }

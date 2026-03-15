@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
+import { useFloatingPosition } from "~/composables/useFloatingPosition";
 
 const props = withDefaults(
   defineProps<{
@@ -21,9 +22,13 @@ let hideDelayId: ReturnType<typeof setTimeout> | null = null;
 
 const HOVER_DELAY_MS = 400;
 const TOUCH_AUTO_HIDE_MS = 2500;
-const VIEWPORT_PADDING = 8;
-const GAP = 6;
 const ARROW_INSET = 12;
+
+const { position: positionFloating } = useFloatingPosition({
+  padding: 8,
+  gap: 6,
+  arrowInset: ARROW_INSET,
+});
 
 const initials = computed(() => {
   if (!props.name) return "?";
@@ -41,33 +46,13 @@ function updatePosition() {
 
   const badge = wrapperRef.value.getBoundingClientRect();
   const tt = tooltipRef.value.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const centerX = badge.left + badge.width / 2;
-  let left = centerX - tt.width / 2;
-  left = Math.max(VIEWPORT_PADDING, Math.min(vw - tt.width - VIEWPORT_PADDING, left));
-
-  const spaceAbove = badge.top;
-  const spaceBelow = vh - badge.bottom;
-  const goAbove = spaceAbove >= tt.height + GAP || spaceAbove >= spaceBelow;
-
-  let top: number;
-  if (goAbove) {
-    top = badge.top - tt.height - GAP;
-    side.value = "above";
-  } else {
-    top = badge.bottom + GAP;
-    side.value = "below";
-  }
-
-  const arrowX = centerX - left;
-  const arrowLeft = Math.max(ARROW_INSET, Math.min(tt.width - ARROW_INSET, arrowX));
+  const { top, left, side: newSide, arrowLeft } = positionFloating(badge, tt);
+  side.value = newSide;
 
   tooltipStyle.value = {
     top: `${top}px`,
     left: `${left}px`,
-    "--arrow-left": `${arrowLeft}px`,
+    "--arrow-left": `${arrowLeft ?? 0}px`,
   };
   positioned.value = true;
 }

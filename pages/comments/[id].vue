@@ -16,6 +16,7 @@ import {
 const STANDARD_REACTIONS = ['👍', '👎', '❤️', '😂', '😮', '😢'] as const;
 import { useClickOutside } from "~/composables/useClickOutside";
 import { useTheme } from "~/composables/useTheme";
+import { useFloatingPosition } from "~/composables/useFloatingPosition";
 
 definePageMeta({
   middleware: "auth",
@@ -47,8 +48,8 @@ const reactionMenuRef = ref<HTMLElement | null>(null);
 const reactionPopupRef = ref<HTMLElement | null>(null);
 const reactionPopupStyle = ref<Record<string, string>>({});
 const reactionPopupPositioned = ref(false);
-const VIEWPORT_PADDING = 8;
-const POPUP_GAP = 6;
+
+const { position: positionReactionPopup } = useFloatingPosition({ padding: 8, gap: 6 });
 
 const { themeMode } = useTheme();
 const emojiPickerTheme = computed(() =>
@@ -65,29 +66,8 @@ function updateReactionPopupPosition() {
   if (!reactionMenuRef.value || !reactionPopupRef.value || !import.meta.client) return;
   const anchor = reactionMenuRef.value.getBoundingClientRect();
   const popup = reactionPopupRef.value.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const centerX = anchor.left + anchor.width / 2;
-  let left = centerX - popup.width / 2;
-  left = Math.max(VIEWPORT_PADDING, Math.min(vw - popup.width - VIEWPORT_PADDING, left));
-
-  const spaceAbove = anchor.top;
-  const spaceBelow = vh - anchor.bottom;
-  const goAbove = spaceAbove >= popup.height + POPUP_GAP || spaceAbove >= spaceBelow;
-
-  let top: number;
-  if (goAbove) {
-    top = anchor.top - popup.height - POPUP_GAP;
-  } else {
-    top = anchor.bottom + POPUP_GAP;
-  }
-  top = Math.max(VIEWPORT_PADDING, Math.min(vh - popup.height - VIEWPORT_PADDING, top));
-
-  reactionPopupStyle.value = {
-    top: `${top}px`,
-    left: `${left}px`,
-  };
+  const { top, left } = positionReactionPopup(anchor, popup);
+  reactionPopupStyle.value = { top: `${top}px`, left: `${left}px` };
   reactionPopupPositioned.value = true;
 }
 

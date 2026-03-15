@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, nextTick } from "vue";
 import {
   GripVertical as LucideGripVertical,
   Check as LucideCheck,
@@ -33,9 +33,12 @@ const editText = ref(props.item.text);
 const editingTags = ref(false);
 const editTagInput = ref("");
 
+const itemEditInputRef = ref<HTMLInputElement | null>(null);
+
 const startEditing = () => {
   isEditing.value = true;
   editText.value = props.item.text;
+  nextTick(() => itemEditInputRef.value?.focus());
 };
 
 const saveEdit = () => {
@@ -47,7 +50,10 @@ const saveEdit = () => {
 
 const handleEditKeydown = (e: KeyboardEvent) => {
   if (e.key === "Enter") saveEdit();
-  else if (e.key === "Escape") isEditing.value = false;
+  else if (e.key === "Escape") {
+    editText.value = props.item.text;
+    isEditing.value = false;
+  }
 };
 
 // Tag Editing
@@ -82,34 +88,15 @@ const handleTagKeydown = (e: KeyboardEvent) => {
 };
 
 const tagEditContainer = ref<HTMLElement | null>(null);
+const tagEditInputRef = ref<HTMLInputElement | null>(null);
 
-const onOutsideClick = (e: MouseEvent) => {
-  if (editingTags.value && tagEditContainer.value && !tagEditContainer.value.contains(e.target as Node)) {
-    if (editTagInput.value.trim()) {
-      addTag();
-    } else {
-      editingTags.value = false;
-    }
-  }
+const onTagEditBlur = () => {
+  if (editTagInput.value.trim()) addTag();
+  editingTags.value = false;
 };
 
 watch(editingTags, (newVal) => {
-  if (import.meta.client) {
-    if (newVal) {
-      // Small delay to prevent immediate trigger from the click that opened the edit mode
-      setTimeout(() => {
-        window.addEventListener('click', onOutsideClick);
-      }, 0);
-    } else {
-      window.removeEventListener('click', onOutsideClick);
-    }
-  }
-});
-
-onUnmounted(() => {
-  if (import.meta.client) {
-    window.removeEventListener('click', onOutsideClick);
-  }
+  if (newVal) nextTick(() => tagEditInputRef.value?.focus());
 });
 
 // Swipe Logic
@@ -221,7 +208,7 @@ const onMouseUp = () => onSwipeEnd();
     >
       <div class="item-row">
         <TheTooltip v-if="!item.isCompleted" :content="$t('items.move')">
-          <button class="drag-handle">
+          <button type="button" class="drag-handle" tabindex="-1" aria-hidden="true">
             <LucideGripVertical :size="20" />
           </button>
         </TheTooltip>
@@ -236,11 +223,11 @@ const onMouseUp = () => onSwipeEnd();
 
         <div class="item-text-wrapper" v-if="isEditing">
           <input
+            ref="itemEditInputRef"
             v-model="editText"
             class="item-edit-input"
             @keydown="handleEditKeydown"
             @blur="saveEdit"
-            autofocus
           />
         </div>
         <span 
@@ -270,15 +257,15 @@ const onMouseUp = () => onSwipeEnd();
       <!-- Secondary Row: Meta & Tags -->
       <div class="item-details-row" v-if="!item.isCompleted">
         <TheTooltip v-if="!editingTags" :content="$t('items.tag')">
-          <div class="tag-list" @click.stop="startEditingTags">
+          <button type="button" class="tag-list" @click.stop="startEditingTags">
             <LucideTag :size="14" class="tag-list-icon" />
-            <div v-for="tag in item.tags" :key="tag.id" class="tag-badge">
+            <span v-for="tag in item.tags" :key="tag.id" class="tag-badge">
               {{ tag.name }}
-            </div>
-            <div class="tag-add-hint" v-if="!item.tags || item.tags.length === 0">
+            </span>
+            <span class="tag-add-hint" v-if="!item.tags || item.tags.length === 0">
               <!-- Icon only, no text needed as per user request -->
-            </div>
-          </div>
+            </span>
+          </button>
         </TheTooltip>
 
         <div v-else class="tag-list editing" ref="tagEditContainer" @click.stop>
@@ -292,12 +279,12 @@ const onMouseUp = () => onSwipeEnd();
             {{ tag.name }} <LucideX :size="10" />
           </span>
           <input
+            ref="tagEditInputRef"
             v-model="editTagInput"
             class="tag-inline-input"
             :placeholder="$t('items.tagPlaceholder')"
             @keydown="handleTagKeydown"
-            @blur="editTagInput.trim() ? addTag() : (editingTags = false)"
-            autofocus
+            @blur="onTagEditBlur"
           />
         </div>
 
@@ -528,6 +515,12 @@ const onMouseUp = () => onSwipeEnd();
   flex-wrap: wrap;
   cursor: pointer;
   min-height: 1.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
 }
 
 .item-meta-actions {

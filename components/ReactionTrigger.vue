@@ -4,10 +4,11 @@ import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
 import { Smile as LucideSmile, Plus as LucidePlus } from 'lucide-vue-next';
 import { useTheme } from '~/composables/useTheme';
+import { useFloatingPosition } from '~/composables/useFloatingPosition';
 
 const STANDARD_REACTIONS = ['👍', '👎', '❤️', '😂', '😮', '😢'] as const;
-const VIEWPORT_PADDING = 8;
-const POPUP_GAP = 6;
+
+const { position: positionFloating } = useFloatingPosition({ padding: 8, gap: 6 });
 
 const props = withDefaults(
   defineProps<{
@@ -64,25 +65,7 @@ function updatePosition() {
   if (!reactionMenuRef.value || !reactionPopupRef.value || !import.meta.client) return;
   const anchor = reactionMenuRef.value.getBoundingClientRect();
   const popup = reactionPopupRef.value.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const centerX = anchor.left + anchor.width / 2;
-  let left = centerX - popup.width / 2;
-  left = Math.max(VIEWPORT_PADDING, Math.min(vw - popup.width - VIEWPORT_PADDING, left));
-
-  const spaceAbove = anchor.top;
-  const spaceBelow = vh - anchor.bottom;
-  const goAbove = spaceAbove >= popup.height + POPUP_GAP || spaceAbove >= spaceBelow;
-
-  let top: number;
-  if (goAbove) {
-    top = anchor.top - popup.height - POPUP_GAP;
-  } else {
-    top = anchor.bottom + POPUP_GAP;
-  }
-  top = Math.max(VIEWPORT_PADDING, Math.min(vh - popup.height - VIEWPORT_PADDING, top));
-
+  const { top, left } = positionFloating(anchor, popup);
   reactionPopupStyle.value = { top: `${top}px`, left: `${left}px` };
   reactionPopupPositioned.value = true;
 }
@@ -92,7 +75,12 @@ watch(reactionMenuOpen, (open) => {
   if (open) {
     nextTick(() => {
       updatePosition();
-      requestAnimationFrame(updatePosition);
+      requestAnimationFrame(() => {
+        updatePosition();
+        // Focus first reaction button for keyboard users
+        const firstBtn = reactionPopupRef.value?.querySelector<HTMLButtonElement>('.reaction-quick-btn');
+        firstBtn?.focus();
+      });
     });
   }
 });
@@ -230,6 +218,11 @@ onUnmounted(() => {
   color: var(--accent-color);
 }
 
+.reaction-trigger-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 .reaction-popup {
   display: flex;
   align-items: center;
@@ -274,6 +267,11 @@ onUnmounted(() => {
   background: var(--bg-surface-elevated);
 }
 
+.reaction-quick-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 .reaction-more-btn {
   width: 2rem;
   height: 2rem;
@@ -296,6 +294,11 @@ onUnmounted(() => {
 .reaction-more-btn.active {
   background: var(--accent-color);
   color: white;
+}
+
+.reaction-more-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 .reaction-picker-dropdown {
@@ -332,6 +335,11 @@ onUnmounted(() => {
 .reaction-pill-inline:hover {
   background: var(--bg-surface-elevated);
   border-color: var(--accent-color);
+}
+
+.reaction-pill-inline:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 .reaction-pill-inline.user-reacted {
