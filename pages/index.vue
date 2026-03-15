@@ -253,8 +253,8 @@ const loadMoreCompleted = () => {
 };
 
 const onDragEnd = () => {
-  isDragging.value = false;
   updatePositions(openItems.value);
+  isDragging.value = false;
 };
 
 const updatePositions = async (sortedArray: any[]) => {
@@ -538,6 +538,7 @@ const getInitials = (name: string) => {
 
 .drag-fallback-clone {
   opacity: 1 !important;
+  transition: none !important;
   box-shadow: var(--shadow-lg), 0 0 24px rgba(0, 0, 0, 0.15) !important;
   cursor: grabbing;
   z-index: 9999 !important;
