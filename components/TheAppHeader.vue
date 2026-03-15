@@ -27,7 +27,7 @@ const emit = defineEmits(["toggle-filter"]);
 
 const { t } = useI18n();
 const { themeMode } = useTheme();
-const { isInstallable, install: installApp } = usePwa();
+const { isInstallable, isIos, showInstallOption, install: installApp } = usePwa();
 const router = useRouter();
 
 const isNavOpen = ref(false);
@@ -56,6 +56,14 @@ const toggleUserMenu = () => {
 const logout = async () => {
   await $fetch("/api/auth/logout", { method: "POST" });
   router.push("/login");
+};
+
+const handleInstallClick = () => {
+  if (isInstallable.value) {
+    installApp();
+  } else if (isIos.value) {
+    alert(t('header.installAppIosHint'));
+  }
 };
 </script>
 
@@ -91,9 +99,9 @@ const logout = async () => {
           </TheDropdownItem>
 
           <TheDropdownItem 
-            v-if="isInstallable" 
+            v-if="showInstallOption" 
             variant="success" 
-            @click="installApp(); isNavOpen = false"
+            @click="handleInstallClick(); isNavOpen = false"
           >
             <template #icon><LucideDownload :size="18" /></template>
             {{ $t('header.installApp') }}

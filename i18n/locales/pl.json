@@ -115,6 +115,7 @@
     "activities": "Aktywność",
     "manageTags": "Zarządzaj tagami",
     "installApp": "Zainstaluj aplikację",
+    "installAppIosHint": "Otwórz tę stronę w Safari i dotknij Udostępnij, potem „Dodaj do ekranu początkowego”. Na iPhonie instalacja jest możliwa tylko przez Safari, nie w Chrome ani innych przeglądarkach.",
     "toggleFilter": "Pokaż/ukryj tagi",
     "theme": "Wygląd",
     "themeLight": "Jasny",

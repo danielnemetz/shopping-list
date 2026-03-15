@@ -115,6 +115,7 @@
     "activities": "Activity",
     "manageTags": "Manage tags",
     "installApp": "Install app",
+    "installAppIosHint": "Open this page in Safari and tap Share, then \"Add to Home Screen\". On iPhone, installation is only possible via Safari, not in Chrome or other browsers.",
     "toggleFilter": "Show/hide tags",
     "theme": "Appearance",
     "themeLight": "Light",

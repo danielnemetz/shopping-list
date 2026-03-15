@@ -115,6 +115,7 @@
     "activities": "Aktivitäten",
     "manageTags": "Tags verwalten",
     "installApp": "App installieren",
+    "installAppIosHint": "Öffne diese Seite in Safari und tippe auf Teilen, dann „Zum Home-Bildschirm“. In Chrome oder anderen Browsern auf dem iPhone ist die Installation nur über Safari möglich.",
     "toggleFilter": "Tags ein-/ausblenden",
     "theme": "Darstellung",
     "themeLight": "Hell",

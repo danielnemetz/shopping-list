@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 let earlyPromptEvent: Event | null = null;
 let listenerRegistered = false;
@@ -14,13 +14,20 @@ function ensureGlobalListener() {
 
 ensureGlobalListener();
 
+function isIosDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
 export const usePwa = () => {
   const deferredPrompt = ref<any>(null);
   const isInstallable = ref(false);
   const isInstalled = ref(false);
+  const isIos = ref(false);
 
   if (import.meta.client) {
     ensureGlobalListener();
+    isIos.value = isIosDevice();
   }
 
   onMounted(() => {
@@ -48,20 +55,25 @@ export const usePwa = () => {
     });
   });
 
+  const showInstallOption = computed(
+    () => !isInstalled.value && (isInstallable.value || isIos.value)
+  );
+
   const install = async () => {
-    if (!deferredPrompt.value) return;
-
-    deferredPrompt.value.prompt();
-    const { outcome } = await deferredPrompt.value.userChoice;
-    console.log(`[PWA] User response: ${outcome}`);
-
-    deferredPrompt.value = null;
-    isInstallable.value = false;
+    if (deferredPrompt.value) {
+      deferredPrompt.value.prompt();
+      const { outcome } = await deferredPrompt.value.userChoice;
+      console.log(`[PWA] User response: ${outcome}`);
+      deferredPrompt.value = null;
+      isInstallable.value = false;
+    }
   };
 
   return {
     isInstallable,
     isInstalled,
+    isIos,
+    showInstallOption,
     install
   };
 };
