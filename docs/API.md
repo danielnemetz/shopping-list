@@ -28,8 +28,9 @@ Die API ist als **OpenAPI 3.0** (ehemals Swagger) spezifiziert:
 ## Nutzung
 
 1. **Doku im Browser ansehen:** App starten, dann [http://localhost:3000/api-docs](http://localhost:3000/api-docs) öffnen.
-2. **Spec bearbeiten:** `public/openapi.yaml` anpassen; Swagger UI lädt die Spec von `/openapi.yaml`.
-3. **Externe Tools:** Die URL zu `openapi.yaml` (z. B. `https://deine-app.de/openapi.yaml`) in [Swagger Editor](https://editor.swagger.io) oder andere OpenAPI-Tools einbinden.
+2. **Production:** Unter `NODE_ENV=production` sind `/api-docs` und `/openapi.yaml` deaktiviert (404), damit die API-Struktur nicht öffentlich einsehbar ist.
+3. **Spec bearbeiten:** `public/openapi.yaml` anpassen; Swagger UI lädt die Spec von `/openapi.yaml`.
+4. **Externe Tools:** Die URL zu `openapi.yaml` (z. B. `https://deine-app.de/openapi.yaml`) in [Swagger Editor](https://editor.swagger.io) oder andere OpenAPI-Tools einbinden.
 
 ---
 
