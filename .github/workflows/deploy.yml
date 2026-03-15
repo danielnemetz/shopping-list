@@ -81,4 +81,16 @@ jobs:
             docker compose ps
             docker compose logs --tail 30 listly
             
+            echo "--- Triggering Client Reload ---"
+            # Extract ADMIN_PASSWORD if present
+            ADMIN_PWD=$(grep -E '^ADMIN_PASSWORD=' .env | cut -d '=' -f2 | tr -d '"'"'")
+            if [ -n "$ADMIN_PWD" ]; then
+              echo "Broadcasting app:reload event..."
+              curl -X POST "https://$APP_DOMAIN/api/admin/reload" \
+                -H "Authorization: Bearer $ADMIN_PWD" \
+                --max-time 10 || echo "Reload trigger failed, but deployment continues."
+            else
+              echo "No ADMIN_PASSWORD found in .env, skipping reload trigger."
+            fi
+            
             echo "Deployment attempt finished."

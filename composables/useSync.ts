@@ -143,6 +143,11 @@ export const useSync = () => {
       } catch (err) {}
     });
 
+    source.addEventListener('app:reload', () => {
+      console.log('[Sync] Received global reload signal. Refreshing client...');
+      window.location.reload();
+    });
+
     source.addEventListener('presence:updated', (e: any) => {
       try {
         syncState.onlineUsers = JSON.parse(e.data) || [];
