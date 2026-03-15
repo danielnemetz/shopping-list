@@ -238,8 +238,8 @@ const openItems = computed({
       (a, b) => a.position - b.position,
     ),
   set: (val) => {
-    items.value = val;
     updatePositions(val);
+    items.value = val;
   },
 });
 
