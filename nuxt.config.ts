@@ -78,6 +78,9 @@ export default defineNuxtConfig({
       enabled: false,
     },
   },
+  routeRules: {
+    '/comments/**': { ssr: false },
+  },
   nitro: {
     serverAssets: [{
       baseName: 'migrations',

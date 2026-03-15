@@ -16,6 +16,8 @@ import { useTheme } from "~/composables/useTheme";
 
 definePageMeta({
   middleware: "auth",
+  // Avoid SSR for this page to prevent Vite worker crash (IPC connection closed)
+  ssr: false,
 });
 
 const router = useRouter();
@@ -68,10 +70,10 @@ const scrollToBottom = async () => {
 
 const fetchItem = async () => {
   try {
-    const items = await $fetch<any[]>("/api/items");
-    item.value = items.find((i: any) => i.id === itemId);
+    item.value = await $fetch<any>(`/api/items/${itemId}`);
   } catch (e) {
     console.error("Failed to fetch item", e);
+    item.value = null;
   }
 };
 

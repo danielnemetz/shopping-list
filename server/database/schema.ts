@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -21,7 +21,11 @@ export const items = sqliteTable('items', {
   createdBy: text('created_by').notNull().references(() => users.id),
   position: real('position').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => [
+  index('idx_items_completed').on(table.isCompleted),
+  index('idx_items_position').on(table.position),
+  index('idx_items_completed_position').on(table.isCompleted, table.position),
+]);
 
 export const activities = sqliteTable('activities', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -29,7 +33,9 @@ export const activities = sqliteTable('activities', {
   action: text('action').notNull(),
   itemName: text('item_name').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => [
+  index('idx_activities_created_at').on(table.createdAt),
+]);
 
 export const comments = sqliteTable('comments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -37,7 +43,10 @@ export const comments = sqliteTable('comments', {
   userId: text('user_id').notNull().references(() => users.id),
   text: text('text').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => [
+  index('idx_comments_item_id').on(table.itemId),
+  index('idx_comments_item_created').on(table.itemId, table.createdAt),
+]);
 
 export const tags = sqliteTable('tags', {
   id: integer('id').primaryKey({ autoIncrement: true }),

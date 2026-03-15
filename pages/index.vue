@@ -57,16 +57,45 @@ const fetchItems = async () => {
   }
 };
 
+const completedItemsList = ref<any[]>([]);
+const completedTotal = ref(0);
+const completedPage = ref(1);
+const COMPLETED_PAGE_SIZE = 20;
+
+const fetchCompletedItems = async (append: boolean) => {
+  try {
+    const page = append ? completedPage.value + 1 : 1;
+    const data = await $fetch<{ items: any[]; pagination: { total: number } }>(
+      `/api/items?completed=1&page=${page}&limit=${COMPLETED_PAGE_SIZE}`,
+    );
+    if (append) {
+      completedItemsList.value = [...completedItemsList.value, ...data.items];
+      completedPage.value = page;
+    } else {
+      completedItemsList.value = data.items;
+      completedTotal.value = data.pagination?.total ?? 0;
+      completedPage.value = 1;
+    }
+  } catch (err) {
+    console.error("Failed to fetch completed items", err);
+  }
+};
+
+const refreshAllItems = () => {
+  fetchItems();
+  fetchCompletedItems(false);
+};
+
 onMounted(async () => {
   try {
     const res = await $fetch("/api/auth/me");
     user.value = res.user;
-    await Promise.all([fetchItems(), fetchTags()]);
+    await Promise.all([fetchItems(), fetchTags(), fetchCompletedItems(false)]);
 
     connect();
-    on("items:updated", fetchItems);
+    on("items:updated", refreshAllItems);
     on("tags:updated", fetchTags);
-    on("comments:updated", fetchItems);
+    on("comments:updated", refreshAllItems);
   } catch (e) { /* handles redirect */ }
 });
 
@@ -112,9 +141,31 @@ const toggleItem = async (item: any) => {
   const previousState = item.isCompleted;
   item.isCompleted = !item.isCompleted;
   try {
+    if (item.isCompleted) {
+      items.value = items.value.filter((i) => i.id !== item.id);
+      completedItemsList.value = [item, ...completedItemsList.value];
+      completedTotal.value += 1;
+    } else {
+      completedItemsList.value = completedItemsList.value.filter((i) => i.id !== item.id);
+      completedTotal.value = Math.max(0, completedTotal.value - 1);
+        const last = items.value[items.value.length - 1];
+        const lastPos = last != null ? last.position : 0;
+      item.position = lastPos + 1000;
+      items.value = [...items.value, item].sort((a, b) => a.position - b.position);
+      fetchItems().then(() => { /* server order wins */ });
+    }
     queueAction(`/api/items/${item.id}`, "PUT", { isCompleted: item.isCompleted });
   } catch (error) {
     item.isCompleted = previousState;
+    if (item.isCompleted) {
+      items.value = [...items.value, item].sort((a, b) => a.position - b.position);
+      completedItemsList.value = completedItemsList.value.filter((i) => i.id !== item.id);
+      completedTotal.value = Math.max(0, completedTotal.value - 1);
+    } else {
+      completedItemsList.value = [item, ...completedItemsList.value];
+      completedTotal.value += 1;
+      refreshAllItems();
+    }
   }
 };
 
@@ -130,12 +181,25 @@ const saveEdit = (item: any, newText: string) => {
 
 const deleteItem = async (item: any) => {
   if (!confirm(`Möchtest du "${item.text}" wirklich löschen?`)) return;
-  const previousItems = [...items.value];
-  items.value = items.value.filter((i) => i.id !== item.id);
+  const wasCompleted = item.isCompleted;
+  const prevItems = [...items.value];
+  const prevCompleted = [...completedItemsList.value];
+  const prevTotal = completedTotal.value;
+  if (wasCompleted) {
+    completedItemsList.value = completedItemsList.value.filter((i) => i.id !== item.id);
+    completedTotal.value = Math.max(0, completedTotal.value - 1);
+  } else {
+    items.value = items.value.filter((i) => i.id !== item.id);
+  }
   try {
     queueAction(`/api/items/${item.id}`, "DELETE", {});
   } catch (error) {
-    items.value = previousItems;
+    if (wasCompleted) {
+      completedItemsList.value = prevCompleted;
+      completedTotal.value = prevTotal;
+    } else {
+      items.value = prevItems;
+    }
   }
 };
 
@@ -146,7 +210,7 @@ const saveItemTags = async (item: any, tagNames: string[]) => {
       method: "PUT",
       body: { tags: tagNames },
     });
-    await Promise.all([fetchItems(), fetchTags()]);
+    await Promise.all([fetchItems(), fetchTags(), fetchCompletedItems(false)]);
   } catch (e) {
     console.error("Failed to save tags", e);
   }
@@ -162,7 +226,8 @@ const handlePopoverClose = async (save: boolean, updatedItem: any) => {
   activeTaggingItem.value = null;
 
   if (save && updatedItem) {
-    const originalItem = items.value.find(i => i.id === updatedItem.id);
+    const originalItem = items.value.find(i => i.id === updatedItem.id)
+      ?? completedItemsList.value.find(i => i.id === updatedItem.id);
     if (originalItem) {
       await saveItemTags(originalItem, updatedItem.tags.map((t: any) => t.name));
     }
@@ -173,42 +238,23 @@ const isDragging = ref(false);
 
 const openItems = computed({
   get: () =>
-    filteredItems(items.value.filter((i) => !i.isCompleted)).sort(
+    filteredItems([...items.value]).sort(
       (a, b) => a.position - b.position,
     ),
   set: (val) => {
-    // This setter is called by vuedraggable when array order changes
-    // We visually update immediately, then calculate new positions and send to server
-
-    // We need to re-merge the openItems into the full items array to maintain state
-    const completedItems = items.value.filter((i) => i.isCompleted);
-    items.value = [...val, ...completedItems];
-
-    // Calculate and save new positions
+    items.value = val;
     updatePositions(val);
   },
 });
 
-const completedItems = computed(() => {
-  return filteredItems(
-    items.value
-      .filter((i) => i.isCompleted)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
-  );
-});
-
-const completedItemsLimit = ref(5);
 const visibleCompletedItems = computed(() =>
-  completedItems.value.slice(0, completedItemsLimit.value),
+  filteredItems(completedItemsList.value),
 );
 const hasMoreCompleted = computed(
-  () => completedItems.value.length > completedItemsLimit.value,
+  () => completedItemsList.value.length < completedTotal.value,
 );
 const loadMoreCompleted = () => {
-  completedItemsLimit.value += 5;
+  fetchCompletedItems(true);
 };
 
 const updatePositions = async (sortedArray: any[]) => {
@@ -266,7 +312,7 @@ const getInitials = (name: string) => {
         Zu erledigen ({{ openItems.length }})
       </div>
 
-      <div class="empty-state" v-if="items.length === 0">
+      <div class="empty-state" v-if="items.length === 0 && completedTotal === 0">
         <LucideCheckCircle :size="48" />
         <p>Alles erledigt! Zeit, die Beine hochzulegen.</p>
       </div>
@@ -298,11 +344,11 @@ const getInitials = (name: string) => {
         </template>
       </draggable>
 
-      <div class="section-title mt-8" v-if="completedItems.length > 0">
-        Erledigt ({{ completedItems.length }})
+      <div class="section-title mt-8" v-if="completedTotal > 0">
+        Erledigt ({{ completedTotal }})
       </div>
 
-      <div class="items-list" v-if="completedItems.length > 0">
+      <div class="items-list" v-if="completedTotal > 0">
         <ShoppingListItem 
           v-for="item in visibleCompletedItems"
           :key="item.id"
@@ -323,7 +369,7 @@ const getInitials = (name: string) => {
           @click="loadMoreCompleted"
         >
           <LucideChevronDown :size="16" />
-          Mehr laden ({{ completedItems.length - completedItemsLimit }} weitere)
+          Mehr laden ({{ completedTotal - completedItemsList.length }} weitere)
         </button>
       </div>
     </main>    <AddItemFooter 
