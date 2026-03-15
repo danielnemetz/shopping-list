@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { ChevronDown as LucideChevronDown } from "lucide-vue-next";
+import {
+  Sun as LucideSun,
+  Moon as LucideMoon,
+  Monitor as LucideMonitor,
+  ChevronDown as LucideChevronDown,
+} from "lucide-vue-next";
 import { useClickOutside } from "~/composables/useClickOutside";
+import { type ThemeMode } from "~/composables/useTheme";
 
-const { locale, t, setLocale } = useI18n();
+const { t } = useI18n();
+const { themeMode, setTheme } = useTheme();
 
-const options: { code: string; flag: string; label: string }[] = [
-  { code: "de", flag: "🇩🇪", label: "Deutsch" },
-  { code: "en", flag: "🇬🇧", label: "English" },
-  { code: "pl", flag: "🇵🇱", label: "Polski" },
+const options: { code: ThemeMode; labelKey: string }[] = [
+  { code: "light", labelKey: "header.themeLight" },
+  { code: "dark", labelKey: "header.themeDark" },
+  { code: "auto", labelKey: "header.themeAuto" },
 ];
 
 const isOpen = ref(false);
@@ -19,27 +26,27 @@ useClickOutside(wrapperRef, () => {
 });
 
 const current = computed(() =>
-  options.find((o) => o.code === locale.value) ?? options[0]
+  options.find((o) => o.code === themeMode.value) ?? options[2]
 );
 
-async function select(code: string) {
+function select(code: ThemeMode) {
+  setTheme(code);
   isOpen.value = false;
-  await setLocale(code);
 }
 </script>
 
 <template>
-  <div class="language-selector" ref="wrapperRef">
+  <div class="theme-selector" ref="wrapperRef">
     <button
       type="button"
       class="selector-trigger"
       :class="{ open: isOpen }"
-      :aria-expanded="isOpen"
-      :aria-haspopup="true"
       @click.stop="isOpen = !isOpen"
     >
-      <span class="flag">{{ current.flag }}</span>
-      <span class="label">{{ current.label }}</span>
+      <LucideSun v-if="themeMode === 'light'" :size="15" />
+      <LucideMoon v-else-if="themeMode === 'dark'" :size="15" />
+      <LucideMonitor v-else :size="15" />
+      <span class="label">{{ t(current.labelKey) }}</span>
       <LucideChevronDown :size="14" class="chevron" />
     </button>
 
@@ -51,11 +58,13 @@ async function select(code: string) {
           type="button"
           role="menuitem"
           class="selector-option"
-          :class="{ active: locale === opt.code }"
+          :class="{ active: themeMode === opt.code }"
           @click.stop="select(opt.code)"
         >
-          <span class="flag">{{ opt.flag }}</span>
-          <span class="label">{{ opt.label }}</span>
+          <LucideSun v-if="opt.code === 'light'" :size="15" />
+          <LucideMoon v-else-if="opt.code === 'dark'" :size="15" />
+          <LucideMonitor v-else :size="15" />
+          <span class="label">{{ t(opt.labelKey) }}</span>
         </button>
       </div>
     </Transition>
@@ -63,7 +72,7 @@ async function select(code: string) {
 </template>
 
 <style scoped>
-.language-selector {
+.theme-selector {
   position: relative;
 }
 
@@ -86,11 +95,6 @@ async function select(code: string) {
 .selector-trigger:hover {
   background: var(--bg-surface-hover);
   border-color: var(--accent-color);
-}
-
-.selector-trigger .flag {
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 .selector-trigger .label {
@@ -146,11 +150,6 @@ async function select(code: string) {
 .selector-option.active {
   background: var(--accent-color);
   color: white;
-}
-
-.selector-option .flag {
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 .dropdown-enter-active,

@@ -11,7 +11,9 @@ import {
   Tags as LucideTags,
   Download as LucideDownload,
   Filter as LucideFilter,
+  Globe as LucideGlobe,
 } from "lucide-vue-next";
+import type { ThemeMode } from "~/composables/useTheme";
 import { useClickOutside } from "~/composables/useClickOutside";
 import { usePwa } from "~/composables/usePwa";
 
@@ -24,12 +26,7 @@ const props = defineProps<{
 const emit = defineEmits(["toggle-filter"]);
 
 const { t } = useI18n();
-const { themeMode, toggleTheme } = useTheme();
-const themeLabel = computed(() => {
-  if (themeMode.value === 'light') return t('header.themeLight');
-  if (themeMode.value === 'dark') return t('header.themeDark');
-  return t('header.themeAuto');
-});
+const { themeMode } = useTheme();
 const { isInstallable, install: installApp } = usePwa();
 const router = useRouter();
 
@@ -134,16 +131,19 @@ const logout = async () => {
             <span class="user-email">{{ user?.email }}</span>
           </template>
 
-          <TheDropdownItem @click.stop="toggleTheme">
-            <template #icon>
+          <div class="user-menu-row">
+            <div class="icon-wrapper">
               <LucideSun v-if="themeMode === 'light'" :size="18" />
               <LucideMoon v-else-if="themeMode === 'dark'" :size="18" />
               <LucideMonitor v-else :size="18" />
-            </template>
-            {{ $t('header.theme') }}: <strong>{{ themeLabel }}</strong>
-          </TheDropdownItem>
+            </div>
+            <span class="row-label">{{ $t('header.theme') }}:</span>
+            <ThemeSelector />
+          </div>
 
-          <div class="user-menu-language">
+          <div class="user-menu-row">
+            <div class="icon-wrapper"><LucideGlobe :size="18" /></div>
+            <span class="row-label">{{ $t('header.language') }}:</span>
             <LanguageSelector />
           </div>
 
@@ -337,7 +337,26 @@ const logout = async () => {
   color: var(--text-muted);
 }
 
-.user-menu-language {
-  padding: 0.25rem 0;
+.user-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 1rem;
+}
+
+.user-menu-row .icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 18px;
+}
+
+.user-menu-row .row-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 </style>
