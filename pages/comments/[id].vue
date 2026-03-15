@@ -371,18 +371,23 @@ onMounted(async () => {
 
           <!-- Reaction pills (existing reactions) -->
           <div v-if="canReact(comment) && (comment.reactions?.length ?? 0) > 0" class="reaction-pills">
-            <button
+            <TheTooltip
               v-for="r of comment.reactions"
               :key="r.emoji"
-              type="button"
-              class="reaction-pill"
-              :class="{ 'user-reacted': r.userReacted }"
-              :title="r.count > 1 ? `${r.emoji} ${r.count}` : r.emoji"
-              @click="toggleReaction(comment.id, r.emoji)"
+              :content="r.userNames?.length ? r.userNames.join(', ') : (r.count > 1 ? `${r.emoji} ${r.count}` : r.emoji)"
+              :long-press-ms="500"
+              @long-press="toggleReaction(comment.id, r.emoji)"
             >
-              <span class="reaction-emoji">{{ r.emoji }}</span>
-              <span v-if="r.count > 1" class="reaction-count">{{ r.count }}</span>
-            </button>
+              <button
+                type="button"
+                class="reaction-pill"
+                :class="{ 'user-reacted': r.userReacted }"
+                @click="toggleReaction(comment.id, r.emoji)"
+              >
+                <span class="reaction-emoji">{{ r.emoji }}</span>
+                <span v-if="r.count > 1" class="reaction-count">{{ r.count }}</span>
+              </button>
+            </TheTooltip>
           </div>
 
           <div class="message-time">{{ formatTime(comment.createdAt) }}</div>

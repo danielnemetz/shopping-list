@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { WifiOff as LucideWifiOff } from "lucide-vue-next";
 import { useTheme } from "~/composables/useTheme";
 
@@ -12,14 +12,31 @@ const isPublicRoute = computed(() => {
   return path === "/login" || path.startsWith("/auth/");
 });
 
-const showOfflineBanner = computed(
-  () => !isPublicRoute.value && !syncState.isConnected
-);
+// Grace period so we don't flash the offline banner on initial load/reload (connection needs a moment).
+const offlineBannerGracePeriodMs = 1200;
+const gracePeriodPassed = ref(false);
+let graceTimer: ReturnType<typeof setTimeout> | null = null;
 
 onMounted(() => {
   applyTheme();
   connect();
+  graceTimer = setTimeout(() => {
+    gracePeriodPassed.value = true;
+    graceTimer = null;
+  }, offlineBannerGracePeriodMs);
 });
+
+onUnmounted(() => {
+  if (graceTimer) clearTimeout(graceTimer);
+});
+
+// Only show when: not on public route, currently disconnected, AND (we've been connected before = real offline, or grace period passed = still no connection after load).
+const showOfflineBanner = computed(
+  () =>
+    !isPublicRoute.value &&
+    !syncState.isConnected &&
+    (syncState.hasConnectedOnce || gracePeriodPassed.value)
+);
 </script>
 
 <template>

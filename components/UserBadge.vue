@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onUnmounted } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -127,12 +127,17 @@ function onDocumentClick(e: MouseEvent) {
   hide();
 }
 
-if (import.meta.client) {
-  onMounted(() => document.addEventListener("click", onDocumentClick, true));
-  onUnmounted(() => document.removeEventListener("click", onDocumentClick, true));
-}
-
-onUnmounted(clearTimers);
+onMounted(() => {
+  if (import.meta.client) {
+    document.addEventListener("click", onDocumentClick, true);
+  }
+});
+onUnmounted(() => {
+  if (import.meta.client) {
+    document.removeEventListener("click", onDocumentClick, true);
+  }
+  clearTimers();
+});
 </script>
 
 <template>

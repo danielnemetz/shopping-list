@@ -1,11 +1,11 @@
 import { sqlite } from '../../utils/db';
 import { requireUserSession } from '../../utils/auth';
-import { getReactionsForEntities } from '../../utils/reactions';
+import { getReactionsForEntities, type ReactionWithUsers } from '../../utils/reactions';
 
 const mapRow = (
   row: any,
   tagsByItem: Map<string, { id: number; name: string }[]>,
-  reactionsByItem: Map<string, { emoji: string; count: number; userReacted: boolean }[]>,
+  reactionsByItem: Map<string, ReactionWithUsers[]>,
 ) => ({
   id: row.id,
   text: row.text,

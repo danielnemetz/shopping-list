@@ -14,7 +14,7 @@ const props = withDefaults(
     entityType: 'comment' | 'item';
     entityId: string;
     itemId?: string;
-    reactions?: { emoji: string; count: number; userReacted: boolean }[];
+    reactions?: { emoji: string; count: number; userReacted: boolean; userNames?: string[] }[];
   }>(),
   { reactions: () => [] },
 );
@@ -175,17 +175,23 @@ onUnmounted(() => {
     </Teleport>
 
     <div v-if="(reactions?.length ?? 0) > 0" class="reaction-pills-inline">
-      <button
+      <TheTooltip
         v-for="r of reactions"
         :key="r.emoji"
-        type="button"
-        class="reaction-pill-inline"
-        :class="{ 'user-reacted': r.userReacted }"
-        @click="toggleReaction(r.emoji)"
+        :content="r.userNames?.length ? r.userNames.join(', ') : null"
+        :long-press-ms="500"
+        @long-press="toggleReaction(r.emoji)"
       >
-        <span class="reaction-emoji">{{ r.emoji }}</span>
-        <span v-if="r.count > 1" class="reaction-count">{{ r.count }}</span>
-      </button>
+        <button
+          type="button"
+          class="reaction-pill-inline"
+          :class="{ 'user-reacted': r.userReacted }"
+          @click="toggleReaction(r.emoji)"
+        >
+          <span class="reaction-emoji">{{ r.emoji }}</span>
+          <span v-if="r.count > 1" class="reaction-count">{{ r.count }}</span>
+        </button>
+      </TheTooltip>
     </div>
   </div>
 </template>

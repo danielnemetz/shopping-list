@@ -10,6 +10,8 @@ interface PendingAction {
 
 interface SyncState {
   isConnected: boolean;
+  /** True after the EventSource has connected at least once (avoids showing offline banner on initial load). */
+  hasConnectedOnce: boolean;
   onlineUsers: string[];
   lastEvent: string | null;
   lastEventData: any | null;
@@ -18,6 +20,7 @@ interface SyncState {
 
 const syncState = reactive<SyncState>({
   isConnected: false,
+  hasConnectedOnce: false,
   onlineUsers: [],
   lastEvent: null,
   lastEventData: null,
@@ -100,6 +103,7 @@ export const useSync = () => {
     source.onopen = () => {
       console.log('[Sync] Connected');
       syncState.isConnected = true;
+      syncState.hasConnectedOnce = true;
     };
 
     source.onerror = () => {
@@ -180,8 +184,11 @@ export const useSync = () => {
         }
       });
       
-      // Initialize state
-      syncState.isConnected = navigator.onLine;
+      // Initialize state (avoids offline banner flash when actually online)
+      if (navigator.onLine) {
+        syncState.isConnected = true;
+        syncState.hasConnectedOnce = true;
+      }
     }
   };
 
