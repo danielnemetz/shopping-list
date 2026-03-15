@@ -142,7 +142,6 @@ function onWrapperClick(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     consumeNextClick = false;
-    if (visible.value) hide();
     return;
   }
   if (visible.value) {
