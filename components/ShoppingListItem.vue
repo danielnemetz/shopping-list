@@ -220,71 +220,63 @@ const getInitials = (name: string) => {
           {{ item.text }}
         </span>
 
-        <div class="item-meta">
-          <div class="pending-badge" v-if="isPending" title="Wird synchronisiert...">
-            <LucideCloudUpload :size="14" class="pulse" />
-          </div>
-          <button class="edit-btn" @click="startEditing" title="Bearbeiten">
+        <div class="action-btns" v-if="!isEditing">
+          <button class="edit-btn" @click.stop="startEditing" title="Bearbeiten">
             <LucideEdit :size="16" />
           </button>
-          <button
-            class="comment-btn"
-            @click="emit('click-comments', item.id)"
-            :title="item.commentCount ? `${item.commentCount} Kommentare` : 'Kommentar schreiben'"
-          >
-            <LucideMessageCircle :size="16" />
-            <span v-if="item.commentCount" class="comment-badge">{{ item.commentCount }}</span>
+          <button class="delete-btn" @click.stop="emit('delete', item)">
+            <LucideTrash2 :size="16" />
           </button>
           <span
-            v-if="!item.isCompleted"
             class="creator-badge"
             :class="{ online: isOnline }"
             :title="'Hinzugefügt von ' + item.creatorName"
           >
             {{ getInitials(item.creatorName) }}
           </span>
-          <button class="delete-btn" @click="emit('delete', item)">
-            <LucideTrash2 :size="16" />
-          </button>
         </div>
       </div>
 
-      <!-- Item Tags -->
-      <div
-        class="item-tags-row"
-        v-if="!editingTags"
-        @click.stop="startEditingTags"
-      >
-        <span
-          class="tag-badge"
-          v-for="tag in item.tags"
-          :key="tag.id"
-          >{{ tag.name }}</span
+      <!-- Secondary Row: Meta & Tags -->
+      <div class="item-details-row" v-if="!item.isCompleted">
+        <div class="tag-list" v-if="!editingTags" @click.stop="startEditingTags">
+          <div v-for="tag in item.tags" :key="tag.id" class="tag-badge">
+            <LucideTag :size="10" />
+            {{ tag.name }}
+          </div>
+          <div class="tag-add-hint" v-if="!item.tags || item.tags.length === 0">
+            <LucideTag :size="12" />
+          </div>
+        </div>
+
+        <div class="tag-list editing" v-else @click.stop>
+          <span
+            class="tag-badge removable"
+            v-for="tag in item.tags"
+            :key="tag.id"
+            @click="removeTag(tag.name)"
+          >
+            {{ tag.name }} <LucideX :size="10" />
+          </span>
+          <input
+            v-model="editTagInput"
+            class="tag-inline-input"
+            placeholder="Tag..."
+            @keydown="handleTagKeydown"
+            @blur="editTagInput.trim() ? addTag() : (editingTags = false)"
+            autofocus
+          />
+        </div>
+
+        <button
+          class="meta-comment-btn"
+          @click.stop="emit('click-comments', item.id)"
+          v-if="item.commentCount > 0"
+          :class="{ 'has-comments': item.commentCount > 0 }"
+          :title="item.commentCount + ' Kommentare'"
         >
-        <span class="tag-add-hint">
-          <LucideTag :size="12" />
-          <span v-if="!item.tags?.length">Tags</span>
-        </span>
-      </div>
-      <div class="item-tags-row editing" v-else @click.stop>
-        <span
-          class="tag-badge removable"
-          v-for="tag in item.tags"
-          :key="tag.name"
-          @click="removeTag(tag.name)"
-        >
-          {{ tag.name }} <LucideX :size="10" />
-        </span>
-        <input
-          v-model="editTagInput"
-          class="tag-inline-input"
-          placeholder="Tag hinzufügen..."
-          @keydown="handleTagKeydown"
-          @blur="editTagInput.trim() ? addTag() : (editingTags = false)"
-          autofocus
-        />
-        <button class="tag-save-btn" @click="editingTags = false">
-          <LucideCheck :size="12" />
+          <LucideMessageCircle :size="14" />
+          <span>{{ item.commentCount }}</span>
         </button>
       </div>
     </div>
@@ -473,57 +465,68 @@ const getInitials = (name: string) => {
   color: var(--text-muted);
 }
 
-.item-meta {
+.action-btns {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+}
+
+.item-details-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Push comment badge to the right */
+  gap: 0.8rem;
+  padding-left: 0;
+  margin-top: 0.4rem;
+}
+
+.tag-list {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  cursor: pointer;
+  min-height: 1.5rem;
 }
 
 .creator-badge {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   background: var(--bg-surface-elevated);
-  padding: 0.2rem 0.5rem;
-  border-radius: 8px;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
   color: var(--text-muted);
   font-weight: 700;
   border: 1px solid var(--border-color);
-  transition: all var(--transition-normal);
+  opacity: 1 !important; /* Always visible */
 }
 
 .creator-badge.online {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.2);
   color: #10b981;
-  border-color: rgba(16, 185, 129, 0.2);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+  /* Boost saturation for completed items */
+  filter: saturate(1.5) brightness(1.1);
 }
 
-.comment-btn {
+.meta-comment-btn {
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0.4rem;
-  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  transition: all var(--transition-fast);
-  border: 1px solid transparent;
-}
-
-.comment-btn:hover {
-  color: var(--accent-color);
-  background: var(--bg-surface-elevated);
-  border-color: var(--border-color);
-}
-
-.comment-badge {
+  gap: 0.25rem;
   font-size: 0.75rem;
   font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all var(--transition-fast);
+}
+
+.meta-comment-btn.has-comments {
   color: var(--accent-color);
   background: rgba(99, 102, 241, 0.1);
-  padding: 0 6px;
-  border-radius: 6px;
 }
 
 .delete-btn, .edit-btn {
@@ -533,13 +536,14 @@ const getInitials = (name: string) => {
   cursor: pointer;
   padding: 0.4rem;
   border-radius: 10px;
-  opacity: 0;
+  opacity: 0.4; /* Mobile-First: Muted but visible */
+  transform: scale(0.9);
   transition: all var(--transition-fast);
-  border: 1px solid transparent;
 }
 
 .list-item:hover .delete-btn, .list-item:hover .edit-btn {
-  opacity: 0.6;
+  opacity: 1;
+  transform: scale(1);
 }
 
 .delete-btn:hover, .edit-btn:hover {

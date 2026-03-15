@@ -290,7 +290,7 @@ const getInitials = (name: string) => {
           :key="item.id"
           :item="item"
           :is-pending="isPending(item.id)"
-          :is-online="false"
+          :is-online="isOnline(item.createdBy)"
           @toggle="toggleItem"
           @delete="deleteItem"
           @save-edit="saveEdit"
