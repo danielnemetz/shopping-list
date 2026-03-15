@@ -28,6 +28,8 @@ const reactionPopupRef = ref<HTMLElement | null>(null);
 const reactionPopupStyle = ref<Record<string, string>>({});
 const reactionPopupPositioned = ref(false);
 const emojiPickerTarget = ref(false);
+const pickerDropdownRef = ref<HTMLElement | null>(null);
+const pickerDropdownStyle = ref<Record<string, string>>({});
 
 const { themeMode } = useTheme();
 const emojiPickerTheme = computed(() =>
@@ -64,10 +66,48 @@ function onSelectReactionEmoji(emoji: { i: string }) {
 function updatePosition() {
   if (!reactionMenuRef.value || !reactionPopupRef.value || !import.meta.client) return;
   const anchor = reactionMenuRef.value.getBoundingClientRect();
-  const popup = reactionPopupRef.value.getBoundingClientRect();
+  const popupEl = reactionPopupRef.value;
+  const popup = new DOMRect(0, 0, popupEl.offsetWidth, popupEl.offsetHeight);
   const { top, left } = positionFloating(anchor, popup);
   reactionPopupStyle.value = { top: `${top}px`, left: `${left}px` };
   reactionPopupPositioned.value = true;
+}
+
+function updatePickerDropdownPosition() {
+  if (!reactionPopupRef.value || !import.meta.client) return;
+  const barRect = reactionPopupRef.value.getBoundingClientRect();
+  const pickerWidth = 280;
+  const pickerHeight = 320;
+  const padding = 8;
+  const gap = 6;
+
+  const container = document.querySelector('.app-container');
+  const cr = container?.getBoundingClientRect();
+  const boundsLeft = cr ? cr.left : 0;
+  const boundsRight = cr ? cr.right : window.innerWidth;
+  const boundsTop = cr ? cr.top : 0;
+  const boundsBottom = cr ? cr.bottom : window.innerHeight;
+
+  let left = barRect.left;
+  left = Math.max(boundsLeft + padding, Math.min(boundsRight - pickerWidth - padding, left));
+
+  const spaceAbove = barRect.top - boundsTop;
+  const spaceBelow = boundsBottom - barRect.bottom;
+  let top: number;
+  if (spaceAbove >= pickerHeight + gap) {
+    top = barRect.top - pickerHeight - gap;
+  } else if (spaceBelow >= pickerHeight + gap) {
+    top = barRect.bottom + gap;
+  } else {
+    top = Math.max(boundsTop + padding, boundsBottom - pickerHeight - padding);
+  }
+
+  pickerDropdownStyle.value = {
+    position: 'fixed',
+    top: `${top}px`,
+    left: `${left}px`,
+    zIndex: '10000',
+  };
 }
 
 watch(reactionMenuOpen, (open) => {
@@ -85,10 +125,23 @@ watch(reactionMenuOpen, (open) => {
   }
 });
 
+watch(emojiPickerTarget, (open) => {
+  if (open) {
+    nextTick(() => {
+      updatePickerDropdownPosition();
+      requestAnimationFrame(updatePickerDropdownPosition);
+    });
+  }
+});
+
 function onDocumentClick(e: MouseEvent) {
   if (!reactionMenuOpen.value) return;
   const target = e.target as Node;
-  if (reactionMenuRef.value?.contains(target) || reactionPopupRef.value?.contains(target)) return;
+  if (
+    reactionMenuRef.value?.contains(target) ||
+    reactionPopupRef.value?.contains(target) ||
+    pickerDropdownRef.value?.contains(target)
+  ) return;
   reactionMenuOpen.value = false;
   emojiPickerTarget.value = false;
 }
@@ -146,20 +199,20 @@ onUnmounted(() => {
               <LucidePlus :size="14" />
             </button>
           </TheTooltip>
-          <Transition name="picker">
-            <div v-if="emojiPickerTarget" class="reaction-picker-dropdown">
-              <ClientOnly>
-                <EmojiPicker
-                  :native="true"
-                  :theme="emojiPickerTheme"
-                  :hide-search="false"
-                  :static-texts="{ placeholder: $t('messages.emojiSearch') }"
-                  @select="onSelectReactionEmoji"
-                />
-                <template #fallback><div class="emoji-picker-placeholder" /></template>
-              </ClientOnly>
-            </div>
-          </Transition>
+        </div>
+      </Transition>
+      <Transition name="picker">
+        <div v-if="emojiPickerTarget" ref="pickerDropdownRef" class="reaction-picker-dropdown" :style="pickerDropdownStyle">
+          <ClientOnly>
+            <EmojiPicker
+              :native="true"
+              :theme="emojiPickerTheme"
+              :hide-search="false"
+              :static-texts="{ placeholder: $t('messages.emojiSearch') }"
+              @select="onSelectReactionEmoji"
+            />
+            <template #fallback><div class="emoji-picker-placeholder" /></template>
+          </ClientOnly>
         </div>
       </Transition>
     </Teleport>
@@ -302,11 +355,6 @@ onUnmounted(() => {
 }
 
 .reaction-picker-dropdown {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  margin-bottom: 0.35rem;
-  z-index: 100;
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -354,6 +402,6 @@ onUnmounted(() => {
 .reaction-popup-enter-from,
 .reaction-popup-leave-to {
   opacity: 0;
-  transform: scale(0.9);
+  transform: translateY(4px);
 }
 </style>

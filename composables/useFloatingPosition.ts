@@ -1,10 +1,10 @@
 /**
- * Generic viewport-aware positioning for floating UI (popovers, tooltips, pickers).
- * Keeps the floating element within the visible viewport with configurable padding and gap.
+ * Generic container-aware positioning for floating UI (popovers, tooltips, pickers).
+ * Clamps floating elements within .app-container bounds (falls back to viewport).
  */
 
 export type FloatingPositionOptions = {
-  /** Minimum distance from viewport edges (px). */
+  /** Minimum distance from container edges (px). */
   padding?: number;
   /** Gap between anchor and floating element (px). */
   gap?: number;
@@ -23,26 +23,31 @@ export type FloatingPositionResult = {
 const DEFAULT_PADDING = 8;
 const DEFAULT_GAP = 6;
 
-/**
- * Computes top/left (and optional arrowLeft) so the floating element stays inside the viewport.
- * - Horizontal: centered on anchor, clamped to padding.
- * - Vertical: above or below anchor depending on space, then clamped to viewport.
- */
+function getBounds(): { left: number; top: number; right: number; bottom: number } {
+  const container = typeof document !== 'undefined'
+    ? document.querySelector('.app-container')
+    : null;
+  if (container) {
+    const r = container.getBoundingClientRect();
+    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+  }
+  return { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
+}
+
 export function useFloatingPosition(options: FloatingPositionOptions = {}) {
   const padding = options.padding ?? DEFAULT_PADDING;
   const gap = options.gap ?? DEFAULT_GAP;
   const arrowInset = options.arrowInset;
 
   function position(anchorRect: DOMRect, floatingRect: DOMRect): FloatingPositionResult {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const bounds = getBounds();
 
     const centerX = anchorRect.left + anchorRect.width / 2;
     let left = centerX - floatingRect.width / 2;
-    left = Math.max(padding, Math.min(vw - floatingRect.width - padding, left));
+    left = Math.max(bounds.left + padding, Math.min(bounds.right - floatingRect.width - padding, left));
 
-    const spaceAbove = anchorRect.top;
-    const spaceBelow = vh - anchorRect.bottom;
+    const spaceAbove = anchorRect.top - bounds.top;
+    const spaceBelow = bounds.bottom - anchorRect.bottom;
     const goAbove = spaceAbove >= floatingRect.height + gap || spaceAbove >= spaceBelow;
 
     let top: number;
@@ -52,7 +57,7 @@ export function useFloatingPosition(options: FloatingPositionOptions = {}) {
     } else {
       top = anchorRect.bottom + gap;
     }
-    top = Math.max(padding, Math.min(vh - floatingRect.height - padding, top));
+    top = Math.max(bounds.top + padding, Math.min(bounds.bottom - floatingRect.height - padding, top));
 
     const result: FloatingPositionResult = { top, left, side };
     if (arrowInset != null && floatingRect.width > 0) {
