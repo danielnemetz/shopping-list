@@ -1,15 +1,21 @@
 import { useSession } from '#imports';
 import type { H3Event } from 'h3';
 
-const FALLBACK_SECRET = 'fallback-secret-key-must-be-min-32-chars';
+const DEV_FALLBACK_SECRET = 'dev-only-fallback-secret-key-min-32-chars!!';
 
 function getSessionPassword(): string {
   const secret = process.env.AUTH_SECRET || process.env.NUXT_AUTH_SECRET;
   if (secret && secret.length >= 32) return secret;
+
   if (process.env.NODE_ENV === 'production') {
-    console.error('[SECURITY] NUXT_AUTH_SECRET is not set or too short. Set a strong 32+ char secret in production.');
+    throw new Error(
+      '[SECURITY] NUXT_AUTH_SECRET is not set or too short (min 32 chars). '
+      + 'The app will not start without a secure session secret in production. '
+      + 'Generate one with: openssl rand -hex 32',
+    );
   }
-  return FALLBACK_SECRET;
+
+  return DEV_FALLBACK_SECRET;
 }
 
 /**

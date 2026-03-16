@@ -413,8 +413,6 @@ onMounted(async () => {
               v-for="r of comment.reactions"
               :key="r.emoji"
               :content="r.userNames?.length ? r.userNames.join(', ') : (r.count > 1 ? `${r.emoji} ${r.count}` : r.emoji)"
-              :long-press-ms="500"
-              @long-press="toggleReaction(comment.id, r.emoji)"
             >
               <button
                 type="button"

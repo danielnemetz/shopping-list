@@ -222,8 +222,6 @@ onUnmounted(() => {
         v-for="r of reactions"
         :key="r.emoji"
         :content="r.userNames?.length ? r.userNames.join(', ') : null"
-        :long-press-ms="500"
-        @long-press="toggleReaction(r.emoji)"
       >
         <button
           type="button"

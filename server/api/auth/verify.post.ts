@@ -3,6 +3,8 @@ import { db } from '../../utils/db';
 import { users, authCodes } from '../../database/schema';
 
 export default defineEventHandler(async (event) => {
+  rateLimit(event, { name: 'verify-code', max: 10, windowMs: 15 * 60 * 1000 });
+
   const body = await readBody(event);
   const email = body?.email?.trim().toLowerCase();
   const code = body?.code?.trim();

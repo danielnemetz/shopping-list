@@ -5,6 +5,8 @@ import { sendLoginCode } from '../../utils/mail';
 import crypto from 'node:crypto';
 
 export default defineEventHandler(async (event) => {
+  rateLimit(event, { name: 'request-code', max: 5, windowMs: 15 * 60 * 1000 });
+
   const body = await readBody(event);
   const email = body?.email?.trim().toLowerCase();
 

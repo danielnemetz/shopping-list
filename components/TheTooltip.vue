@@ -33,6 +33,7 @@ let longPressId: ReturnType<typeof setTimeout> | null = null;
 let consumeNextClick = false;
 
 const ARROW_INSET = 12;
+// Default long-press duration for touch tooltips (ms)
 const LONG_PRESS_MS = props.longPressMs > 0 ? props.longPressMs : 500;
 
 const { position: positionFloating } = useFloatingPosition({
@@ -42,7 +43,8 @@ const { position: positionFloating } = useFloatingPosition({
 });
 
 const hasContent = () => typeof props.content === 'string' && props.content.trim().length > 0;
-const hasLongPress = () => props.longPressMs > 0 && hasContent();
+// On Touch: any tooltip with content can be opened via long-press
+const hasLongPress = () => hasContent();
 
 function updatePosition() {
   if (!wrapperRef.value || !tooltipRef.value || !import.meta.client) return;
@@ -120,7 +122,7 @@ function onDocumentClick(e: MouseEvent) {
   hide();
 }
 
-/** On touch: consume click so trigger does not run. Short tap = show tooltip; long press = emit, parent toggles. */
+/** On touch: optional click consumption when tooltip is already open. */
 function onWrapperClick(e: MouseEvent) {
   if (!hasLongPress()) return;
   if (consumeNextClick) {
@@ -141,7 +143,9 @@ function onTouchStart() {
   if (longPressId) return;
   longPressId = setTimeout(() => {
     longPressId = null;
-    emit('long-press');
+    // Long-press opens the tooltip and consumes the next click,
+    // so the wrapped control does not also toggle.
+    visible.value = true;
     consumeNextClick = true;
   }, LONG_PRESS_MS);
 }
@@ -150,8 +154,7 @@ function onTouchEnd() {
   if (longPressId) {
     clearTimeout(longPressId);
     longPressId = null;
-    visible.value = true;
-    consumeNextClick = true;
+    // Short tap: let the wrapped control handle the click as usual.
   }
 }
 
